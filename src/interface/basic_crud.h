@@ -19,7 +19,7 @@ enum crud_operation_status delete_last_tuple(FILE *file, size_t full_tuple_size)
  * @param pos_to куда скопировать
  * @return статус операции
  */
-enum crud_operation_status swap_tuple_to(FILE *file, uint64_t pos_from, uint64_t pos_to, size_t tuple_size);
+enum crud_operation_status swap_last_tuple_to(FILE *file, uint64_t pos_to, size_t tuple_size);
 
 /**
  * Вставляет в конец файла новый кортеж
@@ -37,6 +37,7 @@ enum crud_operation_status remove_from_id_array(FILE *file, uint64_t id, uint64_
 enum crud_operation_status id_to_offset(FILE *file, uint64_t id, uint64_t* offset);
 enum crud_operation_status offset_to_id(FILE *file, uint64_t* id, uint64_t offset);
 enum crud_operation_status change_string_tuple(FILE *file, uint64_t offset, char *new_string,  uint64_t size);
+enum crud_operation_status check_id(FILE *file, uint64_t id);
 /**
  * Статус операции
  */
