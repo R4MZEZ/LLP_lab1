@@ -29,52 +29,52 @@ int main(int argc, char** argv) {
     str = "Чепух";
     fields[1] = (uint64_t) str;
     add_tuple(file, fields, 3);
-    //remove_tuple(file, 0);
+    remove_tuple(file, 0, 0);
 
     print_tree_header_from_file(file);
     print_tuple_array_from_file(file);
-    uint64_t *fieldss;
-    get_tuple(file, &fieldss, 0);
-
-    struct result_list_tuple *result = NULL;
-    uint64_t cond = 123;
-    find_by_field(file, 0, &cond, &result);
-    printf("--- FIND RESULT ---\n");
-    if (result != NULL) printf("%lu\n", (uint64_t) (*result).value->header.parent);
-    else printf("no result present\n");
-
-    result = NULL;
-    find_by_field(file, 1, (uint64_t *) str, &result);
-    printf("--- FIND RESULT ---\n");
-    if (result != NULL) printf("%lu\n", (uint64_t) (*result).value->header.parent);
-    else printf("No result present\n");
-
-    result = NULL;
-    cond = 1024;
-    find_by_field(file, 0, &cond, &result);
-    printf("--- FIND RESULT ---\n");
-    if (result != NULL) printf("%lu\n", (uint64_t) (*result).value->header.parent);
-    else printf("No result present\n");
-
-    result = NULL;
-    find_by_parent(file, 3, &result);
-    printf("--- FIND RESULT ---\n");
-    if (result != NULL) printf("%lu\n", (uint64_t) (*result).value->header.parent);
-    else printf("No result present\n");
-
-    result = NULL;
-    find_by_parent(file, 1298, &result);
-    printf("--- FIND RESULT ---\n");
-    if (result != NULL) printf("%lu\n", (uint64_t) (*result).value->header.parent);
-    else printf("No result present\n");
-
-    cond = 10;
-    update_tuple(file, 0, &cond, 0);
-
-    char *new_string = "Точно не Чепух";
-    update_tuple(file, 1, (uint64_t *) new_string, 1);
-
-    print_tuple_array_from_file(file);
+//    uint64_t *fieldss;
+//    get_tuple(file, &fieldss, 0);
+//
+//    struct result_list_tuple *result = NULL;
+//    uint64_t cond = 123;
+//    find_by_field(file, 0, &cond, &result);
+//    printf("--- FIND RESULT ---\n");
+//    if (result != NULL) printf("%lu\n", (uint64_t) (*result).value->header.parent);
+//    else printf("no result present\n");
+//
+//    result = NULL;
+//    find_by_field(file, 1, (uint64_t *) str, &result);
+//    printf("--- FIND RESULT ---\n");
+//    if (result != NULL) printf("%lu\n", (uint64_t) (*result).value->header.parent);
+//    else printf("No result present\n");
+//
+//    result = NULL;
+//    cond = 1024;
+//    find_by_field(file, 0, &cond, &result);
+//    printf("--- FIND RESULT ---\n");
+//    if (result != NULL) printf("%lu\n", (uint64_t) (*result).value->header.parent);
+//    else printf("No result present\n");
+//
+//    result = NULL;
+//    find_by_parent(file, 3, &result);
+//    printf("--- FIND RESULT ---\n");
+//    if (result != NULL) printf("%lu\n", (uint64_t) (*result).value->header.parent);
+//    else printf("No result present\n");
+//
+//    result = NULL;
+//    find_by_parent(file, 1298, &result);
+//    printf("--- FIND RESULT ---\n");
+//    if (result != NULL) printf("%lu\n", (uint64_t) (*result).value->header.parent);
+//    else printf("No result present\n");
+//
+//    cond = 10;
+//    update_tuple(file, 0, &cond, 0);
+//
+//    char *new_string = "Точно не Чепух";
+//    update_tuple(file, 1, (uint64_t *) new_string, 1);
+//
+//    print_tuple_array_from_file(file);
     /*int flag = 0;
     char* filename;
     if (argc > 3){

@@ -1,4 +1,5 @@
 #include "basic_crud.h"
+#include "../filetools/big_data_tools.h"
 
 enum crud_operation_status delete_last_tuple(FILE *file, size_t full_tuple_size) {
     fseek(file, full_tuple_size, SEEK_END);

@@ -123,6 +123,8 @@ enum file_read_status read_string_from_tuple(FILE *file, char **string, uint64_t
     return 0;
 }
 
+
+
 static enum file_write_status write_tree_subheader(FILE *file, struct tree_subheader *subheader){
     enum file_write_status code = write_to_file(subheader, file, sizeof(struct tree_subheader));
     return code;
