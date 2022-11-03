@@ -29,6 +29,15 @@ int main(int argc, char** argv) {
     str = "Чепух";
     fields[1] = (uint64_t) str;
     add_tuple(file, fields, 3);
+    fields[0] = 321;
+    str = "Биба";
+    fields[1] = (uint64_t) str;
+    add_tuple(file, fields, 1);
+    fields[0] = 2;
+    str = "Боба";
+    fields[1] = (uint64_t) str;
+    add_tuple(file, fields, 0);
+
     remove_tuple(file, 0, 0);
 
     print_tree_header_from_file(file);

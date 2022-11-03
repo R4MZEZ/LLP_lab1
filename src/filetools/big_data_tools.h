@@ -58,7 +58,7 @@ enum file_write_status write_tree_header(FILE *file, struct tree_header *header)
  * @param tree_header заголовок дерева
  * @return статус чтения
  */
-enum file_read_status read_string_tuple(struct tuple **tuple, FILE *file, uint64_t pattern_size);
+enum file_read_status read_string_tuple(FILE *file, struct tuple **tuple, uint64_t pattern_size);
 
 /**
  * Прочитать обычный кортеж
@@ -67,7 +67,7 @@ enum file_read_status read_string_tuple(struct tuple **tuple, FILE *file, uint64
  * @param tree_header заголовок
  * @return статус чтения
  */
-enum file_read_status read_basic_tuple(struct tuple **tuple, FILE *file, uint64_t pattern_size);
+enum file_read_status read_basic_tuple(FILE *file, struct tuple **tuple, uint64_t pattern_size);
 
 /**
  * Прочитать заголовок файла

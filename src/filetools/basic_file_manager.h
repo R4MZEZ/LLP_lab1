@@ -10,7 +10,7 @@
  * @param file файл для чтения
  * @return статус чтения
  */
-enum file_read_status read_from_file(void *buffer, FILE *file, size_t size);
+enum file_read_status read_from_file(FILE *file, void *buffer, size_t size);
 
 /**
  * Записать данные в файл
@@ -18,7 +18,7 @@ enum file_read_status read_from_file(void *buffer, FILE *file, size_t size);
  * @param file файл для записи
  * @return статус записи
  */
-enum file_write_status write_to_file(void *buffer, FILE *file, size_t size);
+enum file_write_status write_to_file(FILE *file, void *buffer, size_t size);
 
 /**
  * Открытие файла

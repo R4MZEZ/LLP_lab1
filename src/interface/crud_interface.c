@@ -20,6 +20,7 @@ enum crud_operation_status add_tuple(FILE *file, uint64_t *fields, uint64_t pare
     }
     size_t full_tuple_size = sizeof(union tuple_header) + get_real_tuple_size(size);
     enum crud_operation_status status = insert_new_tuple(file, new_tuple, full_tuple_size, link);
+    link_strings_to_tuple(file, new_tuple, *link);
     append_to_id_array(file, *link);
     free(link);
     return status;
@@ -34,7 +35,7 @@ enum crud_operation_status get_tuple(FILE *file, uint64_t **fields, uint64_t id)
     size_t size;
     get_types(file, &types, &size);
     fseek(file, offset, SEEK_SET);
-    read_basic_tuple(&cur_tuple, file, (uint64_t) size);
+    read_basic_tuple(file, &cur_tuple, (uint64_t) size);
     *fields = malloc(sizeof(uint64_t) * size);
     for (size_t iter = 0; iter < size; iter++) {
         if (types[iter] == STRING_TYPE) {
@@ -63,29 +64,28 @@ enum crud_operation_status remove_tuple(FILE *file, uint64_t id, uint8_t str_fla
             if (types[field_num] == STRING_TYPE) {
                 struct tuple *tpl;
                 fseek(file, (long) offset, SEEK_SET);
-                read_basic_tuple(&tpl, file, size);
-                printf("str_off: %lu\n", tpl->data[field_num]);
+                read_basic_tuple(file, &tpl, size);
                 remove_tuple(file, tpl->data[field_num], 1);
             }
         }
 
 
-        swap_last_tuple_to(file, offset, get_real_tuple_size(size) + sizeof(union tuple_header));
-//
-//        struct result_list_tuple *children = NULL;
-//        find_by_parent(file, id, &children);
-//        if (children != NULL) {
-//            void *start = children;
-//            do {
-//                remove_tuple(file, children->id, 0);
-//                children = children->next;
-//            } while (children != start);
-//        }
+        swap_last_tuple_to(file, offset, get_real_tuple_size(size));
+
+        struct result_list_tuple *children = NULL;
+        find_by_parent(file, id, &children);
+        if (children != NULL) {
+            void *start = children;
+            do {
+                remove_tuple(file, children->id, 0);
+                children = children->next;
+            } while (children != start);
+        }
     }else{
         struct tuple *str_tpl;
         while (id != NULL_VALUE){
             fseek(file, id, SEEK_SET);
-            read_string_tuple(&str_tpl, file, size);
+            read_string_tuple(file, &str_tpl, size);
             swap_last_tuple_to(file, id, get_real_tuple_size(size) + sizeof(union tuple_header));
             id = str_tpl->header.next;
         }
@@ -125,7 +125,7 @@ find_by_field(FILE *file, uint64_t field_number, uint64_t *condition, struct res
     for (size_t i = 0; i < header->subheader->cur_id; i++) {
         if (header->id_sequence[i] == NULL_VALUE) continue;
         fseek(file, header->id_sequence[i], SEEK_SET);
-        read_basic_tuple(&cur_tuple, file, size);
+        read_basic_tuple(file, &cur_tuple, size);
         if (type == STRING_TYPE) {
             char *s;
             read_string_from_tuple(file, &s, size, cur_tuple->data[field_number]);
@@ -150,7 +150,7 @@ enum crud_operation_status find_by_parent(FILE *file, uint64_t parent_id, struct
     for (size_t i = 0; i < header->subheader->cur_id; i++) {
         if (header->id_sequence[i] == NULL_VALUE) continue;
         fseek(file, header->id_sequence[i], SEEK_SET);
-        read_basic_tuple(&cur_tuple, file, header->subheader->pattern_size);
+        read_basic_tuple(file, &cur_tuple, header->subheader->pattern_size);
         if (cur_tuple->header.parent == parent_id) {
             append_to_result_list(&cur_tuple, i, result);
         }
@@ -171,7 +171,7 @@ enum crud_operation_status update_tuple(FILE *file, uint64_t field_number, uint6
     id_to_offset(file, id, &offset);
     struct tuple *cur_tuple = malloc(sizeof(struct tuple));
     fseek(file, offset, SEEK_SET);
-    read_basic_tuple(&cur_tuple, file, size);
+    read_basic_tuple(file, &cur_tuple, size);
     if (type == STRING_TYPE) {
         change_string_tuple(file, cur_tuple->data[field_number], (char *) new_value, get_real_tuple_size(size));
     } else {

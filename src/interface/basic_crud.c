@@ -1,5 +1,6 @@
 #include "basic_crud.h"
 #include "../filetools/big_data_tools.h"
+#include "crud_interface.h"
 
 enum crud_operation_status delete_last_tuple(FILE *file, size_t full_tuple_size) {
     fseek(file, full_tuple_size, SEEK_END);
@@ -18,32 +19,68 @@ enum crud_operation_status swap_last_tuple_to(FILE *file, uint64_t pos_to, size_
     if (pos_from != pos_to) {
         fseek(file, pos_from, SEEK_SET);
         void *buffer = malloc(tuple_size);
-        read_from_file(buffer, file, tuple_size);
-        
+        read_from_file(file, buffer, tuple_size);
+
         fseek(file, pos_to, SEEK_SET);
-        write_to_file(buffer, file, tuple_size);
+        write_to_file(file, buffer, tuple_size);
+
+
 
         fseek(file, 0, SEEK_SET);
         struct tree_header *header = malloc(sizeof(struct tree_header));
         size_t pos;
         read_tree_header(header, file, &pos);
         uint64_t id;
-        
+        struct tuple *tpl;
 
-        if (offset_to_id(file, &id, pos_from) == CRUD_INVALID){
-            struct tuple* tpl;
+        if (offset_to_id(file, &id, pos_from) == CRUD_INVALID) {
+
             fseek(file, pos_from, SEEK_SET);
-            read_basic_tuple(&tpl, file, size);
+            read_string_tuple(file, &tpl, size);
+            union tuple_header *temp_header = malloc(sizeof(union tuple_header));
 
-            printf("INVALID\n%lu %lu %lu %lu\n", id, tpl->header.next, tpl->data[0], pos_from);
+            if (tpl->header.next != 0) {
+                fseek(file, tpl->header.next, SEEK_SET);
+                read_from_file(file, temp_header, sizeof(union tuple_header));
+                temp_header->prev = pos_to;
+                fseek(file, tpl->header.next, SEEK_SET);
+                write_to_file(file, temp_header, sizeof(union tuple_header));
+            }
+
+            fseek(file, tpl->header.prev, SEEK_SET);
+            read_from_file(file, temp_header, sizeof(union tuple_header));
+            if (temp_header->next == pos_from) {
+                temp_header->next = pos_to;
+                fseek(file, tpl->header.prev, SEEK_SET);
+                write_to_file(file, temp_header, sizeof(union tuple_header));
+            } else {
+
+
+                struct tuple *parent;
+                fseek(file, tpl->header.prev, SEEK_SET);
+                read_basic_tuple(file, &parent, size);
+                for (size_t iter = 0; iter < size; iter++) {
+                    if (types[iter] == STRING_TYPE && parent->data[iter] == pos_from) {
+                        parent->data[iter] = pos_to;
+                        break;
+                    }
+                }
+
+//                printf("PARENT\n data[1]: %lu data[0]: %lu\n", parent->data[1], parent->data[0]);
+                fseek(file, (tpl->header.prev), SEEK_SET);
+                write_tuple(file, parent, get_real_tuple_size(size));
+            }
+
+//            printf("STRING\n next: %lu, prev: %lu, pos_from: %lu, pos_to: %lu\n", tpl->header.next, tpl->header.prev, pos_from, pos_to);
+        } else {
+            fseek(file, pos_from, SEEK_SET);
+            read_basic_tuple(file, &tpl, size);
+            link_strings_to_tuple(file, tpl, pos_to);
+            header->id_sequence[id] = pos_to;
+            write_tree_header(file, header);
+//            printf("TUPLE\nid: %lu, tpl1->data[1]: %lu, pos_from: %lu, pos_to: %lu\n", id, tpl->data[1], pos_from, pos_to);
         }
-        struct tuple* tpl1;
-        read_basic_tuple(&tpl1, file, size);
-        printf("VALID\n%lu %lu %lu %lu %lu\n", id, tpl1->header.parent, tpl1->data[0], pos_from, pos_to);
 
-
-        header->id_sequence[id] = pos_to;
-        write_tree_header(file, header);
         free(header);
 
     }
@@ -51,7 +88,8 @@ enum crud_operation_status swap_last_tuple_to(FILE *file, uint64_t pos_to, size_
     return CRUD_OK;
 }
 
-enum crud_operation_status insert_new_tuple(FILE *file, struct tuple *tuple, size_t full_tuple_size, uint64_t *tuple_pos) {
+enum crud_operation_status
+insert_new_tuple(FILE *file, struct tuple *tuple, size_t full_tuple_size, uint64_t *tuple_pos) {
     fseek(file, 0, SEEK_END);
     *tuple_pos = ftell(file);
     int fd = fileno(file);
@@ -86,6 +124,24 @@ enum crud_operation_status insert_string_tuple(FILE *file, char *string, size_t 
     return 0;
 }
 
+enum crud_operation_status link_strings_to_tuple(FILE *file, struct tuple *tpl, uint64_t tpl_offset) {
+    uint32_t *types;
+    size_t size;
+    get_types(file, &types, &size);
+    struct tuple *str;
+
+    for (uint64_t iter = 0; iter < size; iter++) {
+        if (types[iter] == STRING_TYPE) {
+            fseek(file, tpl->data[iter], SEEK_SET);
+            read_string_tuple(file, &str, size);
+            str->header.prev = tpl_offset;
+            fseek(file, tpl->data[iter], SEEK_SET);
+            write_tuple(file, str, size);
+        }
+    }
+    return CRUD_OK;
+}
+
 void get_types(FILE *file, uint32_t **types, size_t *size) {
     fseek(file, 0, SEEK_SET);
     struct tree_header *header = malloc(sizeof(struct tree_header));
@@ -114,8 +170,7 @@ enum crud_operation_status append_to_id_array(FILE *file, uint64_t offset) {
 }
 
 
-
-enum crud_operation_status remove_from_id_array(FILE *file, uint64_t id, uint64_t* offset) {
+enum crud_operation_status remove_from_id_array(FILE *file, uint64_t id, uint64_t *offset) {
     fseek(file, 0, SEEK_SET);
     struct tree_header *header = malloc(sizeof(struct tree_header));
     size_t pos;
@@ -124,7 +179,7 @@ enum crud_operation_status remove_from_id_array(FILE *file, uint64_t id, uint64_
         return CRUD_INVALID;
     else {
         *offset = header->id_sequence[id];
-        if (header->subheader->cur_id-1 == id) {
+        if (header->subheader->cur_id - 1 == id) {
             header->subheader->cur_id--;
         }
         header->id_sequence[id] = 0;
@@ -134,7 +189,7 @@ enum crud_operation_status remove_from_id_array(FILE *file, uint64_t id, uint64_
     }
 }
 
-enum crud_operation_status id_to_offset(FILE *file, uint64_t id, uint64_t* offset) {
+enum crud_operation_status id_to_offset(FILE *file, uint64_t id, uint64_t *offset) {
     fseek(file, 0, SEEK_SET);
     struct tree_header *header = malloc(sizeof(struct tree_header));
     size_t pos;
@@ -143,12 +198,12 @@ enum crud_operation_status id_to_offset(FILE *file, uint64_t id, uint64_t* offse
     return CRUD_OK;
 }
 
-enum crud_operation_status offset_to_id(FILE *file, uint64_t* id, uint64_t offset) {
+enum crud_operation_status offset_to_id(FILE *file, uint64_t *id, uint64_t offset) {
     struct tree_header *header = malloc(sizeof(struct tree_header));
     size_t pos;
     read_tree_header(header, file, &pos);
-    for (size_t iter = 0; iter < header->subheader->cur_id; iter++){
-        if (header->id_sequence[iter] == offset){
+    for (size_t iter = 0; iter < header->subheader->cur_id; iter++) {
+        if (header->id_sequence[iter] == offset) {
             *id = iter;
             free(header);
             return CRUD_OK;
@@ -165,9 +220,9 @@ enum crud_operation_status change_string_tuple(FILE *file, uint64_t offset, char
     do {
         offset = old_offset;
         fseek(file, offset, SEEK_SET);
-        read_basic_tuple(&cur_tuple, file, size);
+        read_basic_tuple(file, &cur_tuple, size);
         fseek(file, offset, SEEK_SET);
-        cur_tuple->data = (uint64_t * )(new_string);
+        cur_tuple->data = (uint64_t *) (new_string);
         new_string = new_string + size;
         write_tuple(file, cur_tuple, size);
         old_offset = cur_tuple->header.next;

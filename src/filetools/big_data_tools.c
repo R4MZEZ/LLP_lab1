@@ -15,17 +15,17 @@ size_t get_real_id_array_size(uint64_t pattern_size, uint64_t cur_id){
 }
 
 static enum file_read_status read_tree_subheader(struct tree_subheader *header, FILE *file) {
-    enum file_read_status code = read_from_file(header, file, sizeof(struct tree_subheader));
+    enum file_read_status code = read_from_file(file, header, sizeof(struct tree_subheader));
     return code;
 }
 
 static enum file_read_status read_key(struct key *key, FILE *file) {
     struct key_header *header = malloc(sizeof(struct key_header));
-    enum file_read_status code = read_from_file(header, file, sizeof(struct key_header));
+    enum file_read_status code = read_from_file(file, header, sizeof(struct key_header));
     key->header = header;
 
     char *key_value = (char *) malloc(header->size/FILE_GRANULARITY + (header->size % FILE_GRANULARITY ? FILE_GRANULARITY : 0));
-    code |= read_from_file(key_value, file, header->size);
+    code |= read_from_file(file, key_value, header->size);
     key->key_value = key_value;
 
     return code;
@@ -48,31 +48,31 @@ enum file_read_status read_tree_header(struct tree_header *header, FILE *file, s
     size_t real_id_array_size = get_real_id_array_size(header->subheader->pattern_size, header->subheader->cur_id);
     uint64_t *id_array = (uint64_t *) malloc(real_id_array_size * sizeof(uint64_t));
     header->id_sequence = id_array;
-    code |= read_from_file(id_array, file, real_id_array_size * sizeof(uint64_t));
+    code |= read_from_file(file, id_array, real_id_array_size * sizeof(uint64_t));
 
     *fpos = ftell(file);
 
     return code;
 }
 
-enum file_read_status read_basic_tuple(struct tuple **tuple, FILE *file, uint64_t pattern_size) {
+enum file_read_status read_basic_tuple(FILE *file, struct tuple **tuple, uint64_t pattern_size) {
     union tuple_header *header = (union tuple_header *) malloc(sizeof(union tuple_header));
-    enum file_read_status code = read_from_file(header, file, sizeof(union tuple_header));
-    if (header->alloc) {
-        *tuple = (struct tuple *)header->alloc;
-        free(header);
-        return code;
-    }
+    enum file_read_status code = read_from_file(file, header, sizeof(union tuple_header));
+//    if (header->alloc) {
+//        *tuple = (struct tuple *)header->alloc;
+//        free(header);
+//        return code;
+//    }
     fseek(file, -(sizeof(union tuple_header)), SEEK_CUR);
     struct tuple *temp_tuple = (struct tuple *) malloc(sizeof(struct tuple));
     temp_tuple->header = *header;
     free(header);
     header->alloc = (uint64_t) temp_tuple;
-    write_to_file(header, file, sizeof(union tuple_header));
+    write_to_file(file, header, sizeof(union tuple_header));
 
 
     uint64_t *data = (uint64_t *) malloc(get_real_tuple_size(pattern_size));
-    code |= read_from_file(data, file, get_real_tuple_size(pattern_size));
+    code |= read_from_file(file, data, get_real_tuple_size(pattern_size));
     temp_tuple->data = data;
 
     *tuple = temp_tuple;
@@ -80,15 +80,15 @@ enum file_read_status read_basic_tuple(struct tuple **tuple, FILE *file, uint64_
     return code;
 }
 
-enum file_read_status read_string_tuple(struct tuple **tuple, FILE *file, uint64_t pattern_size) {
+enum file_read_status read_string_tuple(FILE *file, struct tuple **tuple, uint64_t pattern_size) {
     union tuple_header *header = malloc(sizeof(union tuple_header));
-    enum file_read_status code = read_from_file(header, file, sizeof(union tuple_header));
+    enum file_read_status code = read_from_file(file, header, sizeof(union tuple_header));
     struct tuple *temp_tuple = (struct tuple *) malloc(sizeof(struct tuple));
     temp_tuple->header = *header;
     free(header);
 
     uint64_t *data = (uint64_t *) malloc(get_real_tuple_size(pattern_size));
-    code |= read_from_file(data, file, get_real_tuple_size(pattern_size));
+    code |= read_from_file(file, data, get_real_tuple_size(pattern_size));
     temp_tuple->data = data;
 
     *tuple = temp_tuple;
@@ -100,13 +100,14 @@ static size_t how_long_string_is(FILE *file, uint64_t offset){
     fseek(file, offset, SEEK_SET);
     size_t len = 1;
     union tuple_header *temp_header = malloc(sizeof(union tuple_header));
-    read_from_file(temp_header, file, sizeof(union tuple_header));
+    read_from_file( file, temp_header,sizeof(union tuple_header));
+//    printf("'%lu %lu %lu'\n", offset, temp_header->next, temp_header->prev);
     while(temp_header->next){
         fseek(file, temp_header->next, SEEK_SET);
-        read_from_file(temp_header, file, sizeof(union tuple_header));
+        read_from_file(file, temp_header, sizeof(union tuple_header));
         len++;
     }
-    return len;
+    return 1;
 }
 
 enum file_read_status read_string_from_tuple(FILE *file, char **string, uint64_t pattern_size, uint64_t offset){
@@ -116,7 +117,7 @@ enum file_read_status read_string_from_tuple(FILE *file, char **string, uint64_t
     struct tuple *temp_tuple;
     for(size_t iter = 0; iter < str_len; iter++) {
         fseek(file, offset, SEEK_SET);
-        read_string_tuple(&temp_tuple, file, pattern_size);
+        read_string_tuple(file, &temp_tuple, pattern_size);
         offset = temp_tuple->header.next;
         strncpy((*string) + rts * iter, (char *) temp_tuple->data, rts);
     }
@@ -126,21 +127,21 @@ enum file_read_status read_string_from_tuple(FILE *file, char **string, uint64_t
 
 
 static enum file_write_status write_tree_subheader(FILE *file, struct tree_subheader *subheader){
-    enum file_write_status code = write_to_file(subheader, file, sizeof(struct tree_subheader));
+    enum file_write_status code = write_to_file(file, subheader, sizeof(struct tree_subheader));
     return code;
 }
 
 static enum file_write_status write_pattern(FILE *file, struct key **pattern, size_t pattern_size){
     enum file_write_status code = NULL_VALUE;
     for (; pattern_size-- > 0; pattern++){
-        code |= write_to_file((*pattern)->header, file, sizeof(struct key_header));
-        code |= write_to_file((*pattern)->key_value, file, (*pattern)->header->size);
+        code |= write_to_file(file, (*pattern)->header, sizeof(struct key_header));
+        code |= write_to_file(file, (*pattern)->key_value, (*pattern)->header->size);
     }
     return code;
 }
 
 static enum file_write_status write_id_sequence(FILE *file, uint64_t *id_sequence, size_t size){
-    enum file_write_status code = write_to_file(id_sequence, file, size);
+    enum file_write_status code = write_to_file(file, id_sequence, size);
     return code;
 }
 
@@ -172,9 +173,9 @@ enum file_open_status open_file_anyway(FILE **file, char *filename){
 enum file_write_status write_tuple(FILE *file, struct tuple *tuple, size_t tuple_size){
     union tuple_header *tuple_header = malloc(sizeof(union  tuple_header));
     *tuple_header = tuple->header;
-    enum file_write_status code = write_to_file(tuple_header, file, sizeof(union  tuple_header));
+    enum file_write_status code = write_to_file(file, tuple_header, sizeof(union  tuple_header));
     free(tuple_header);
-    code |= write_to_file(tuple->data, file, tuple_size);
+    code |= write_to_file(file, tuple->data, tuple_size);
     return code;
 }
 
@@ -219,10 +220,10 @@ void print_tree_header_from_file(FILE *file) {
         for(size_t i = 0; i < header->subheader->cur_id; i++){
             if (header->id_sequence[i] == NULL_VALUE) continue;
             fseek(file, header->id_sequence[i], SEEK_SET);
-            read_basic_tuple(&cur_tuple, file, header->subheader->pattern_size);
+            read_basic_tuple(file, &cur_tuple, size);
             printf("--- TUPLE %3zu ---\n", i);
             for(size_t iter = 0; iter < size; iter++){
-                if (header->pattern[iter]->header->type == STRING_TYPE){
+                if (fields[iter] == STRING_TYPE){
                     char *s;
                     read_string_from_tuple(file, &s, header->subheader->pattern_size, cur_tuple->data[iter]);
                     printf("%-20s %s\n", header->pattern[iter]->key_value, s);
