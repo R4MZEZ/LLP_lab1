@@ -1,7 +1,6 @@
 #include "crud_interface.h"
 
 enum crud_operation_status add_tuple(FILE *file, uint64_t *fields, uint64_t parent_id) {
-    //todo мб в prev первого кортежа строк пихать ссылку на базовый кортеж, чтобы проще было менять ссылку?
     uint32_t *types;
     size_t size;
     get_types(file, &types, &size);
@@ -28,8 +27,7 @@ enum crud_operation_status add_tuple(FILE *file, uint64_t *fields, uint64_t pare
 
 enum crud_operation_status get_tuple(FILE *file, uint64_t **fields, uint64_t id) {
     uint64_t offset;
-    id_to_offset(file, id, &offset);
-    if (offset == NULL_VALUE) return CRUD_INVALID;
+    if (id_to_offset(file, id, &offset) == CRUD_INVALID) return CRUD_INVALID;
     struct tuple *cur_tuple;
     uint32_t *types;
     size_t size;
@@ -46,6 +44,7 @@ enum crud_operation_status get_tuple(FILE *file, uint64_t **fields, uint64_t id)
             (*fields)[iter] = cur_tuple->data[iter];
         }
     }
+    return CRUD_OK;
 }
 
 enum crud_operation_status remove_tuple(FILE *file, uint64_t id, uint8_t str_flag) {
@@ -74,16 +73,13 @@ enum crud_operation_status remove_tuple(FILE *file, uint64_t id, uint8_t str_fla
 
         struct result_list_tuple *children = NULL;
         find_by_parent(file, id, &children);
-        if (children != NULL) {
-            void *start = children;
-            do {
-                remove_tuple(file, children->id, 0);
-                children = children->next;
-            } while (children != start);
+        while (children != NULL) {
+            remove_tuple(file, children->id, 0);
+            children = children->prev;
         }
-    }else{
+    } else {
         struct tuple *str_tpl;
-        while (id != NULL_VALUE){
+        while (id != NULL_VALUE) {
             fseek(file, id, SEEK_SET);
             read_string_tuple(file, &str_tpl, size);
             swap_last_tuple_to(file, id, get_real_tuple_size(size) + sizeof(union tuple_header));
@@ -97,14 +93,10 @@ enum crud_operation_status remove_tuple(FILE *file, uint64_t id, uint8_t str_fla
 static void append_to_result_list(struct tuple **tuple_to_add, uint64_t id, struct result_list_tuple **result) {
     if ((*result) == NULL) {
         *result = malloc(sizeof(struct result_list_tuple));
-        (*result)->prev = (*result);
-        (*result)->next = (*result);
+        (*result)->prev = NULL;
     } else {
         struct result_list_tuple *new_result = malloc(sizeof(struct result_list_tuple));
-        (*result)->prev->next = new_result;
-        (*result)->prev = new_result;
-        new_result->prev = (*result)->prev;
-        new_result->next = *result;
+        new_result->prev = *result;
         *result = new_result;
     }
     (*result)->value = *tuple_to_add;
@@ -119,8 +111,7 @@ find_by_field(FILE *file, uint64_t field_number, uint64_t *condition, struct res
     get_types(file, &types, &size);
     uint64_t type = types[field_number];
     struct tree_header *header = malloc(sizeof(struct tree_header));
-    size_t pos;
-    read_tree_header(header, file, &pos);
+    read_tree_header(header, file);
     struct tuple *cur_tuple = malloc(sizeof(struct tuple));
     for (size_t i = 0; i < header->subheader->cur_id; i++) {
         if (header->id_sequence[i] == NULL_VALUE) continue;
@@ -143,19 +134,19 @@ find_by_field(FILE *file, uint64_t field_number, uint64_t *condition, struct res
 }
 
 enum crud_operation_status find_by_parent(FILE *file, uint64_t parent_id, struct result_list_tuple **result) {
-    struct tree_header *header = malloc(sizeof(struct tree_header));
-    size_t pos;
-    read_tree_header(header, file, &pos);
+    struct tree_header header;
+    read_tree_header(&header, file);
     struct tuple *cur_tuple = malloc(sizeof(struct tuple));
-    for (size_t i = 0; i < header->subheader->cur_id; i++) {
-        if (header->id_sequence[i] == NULL_VALUE) continue;
-        fseek(file, header->id_sequence[i], SEEK_SET);
-        read_basic_tuple(file, &cur_tuple, header->subheader->pattern_size);
+    for (size_t i = 0; i < header.subheader->cur_id; i++) {
+        if (header.id_sequence[i] == NULL_VALUE) continue;
+        fseek(file, header.id_sequence[i], SEEK_SET);
+        read_basic_tuple(file, &cur_tuple, header.subheader->pattern_size);
         if (cur_tuple->header.parent == parent_id) {
             append_to_result_list(&cur_tuple, i, result);
         }
 
     }
+    printf("\n");
     return 0;
 }
 
@@ -164,12 +155,9 @@ enum crud_operation_status update_tuple(FILE *file, uint64_t field_number, uint6
     size_t size;
     get_types(file, &types, &size);
     uint64_t type = types[field_number];
-    struct tree_header *header = malloc(sizeof(struct tree_header));
-    size_t pos;
-    read_tree_header(header, file, &pos);
     uint64_t offset;
     id_to_offset(file, id, &offset);
-    struct tuple *cur_tuple = malloc(sizeof(struct tuple));
+    struct tuple *cur_tuple;
     fseek(file, offset, SEEK_SET);
     read_basic_tuple(file, &cur_tuple, size);
     if (type == STRING_TYPE) {

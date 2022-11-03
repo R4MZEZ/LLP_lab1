@@ -28,8 +28,7 @@ enum crud_operation_status swap_last_tuple_to(FILE *file, uint64_t pos_to, size_
 
         fseek(file, 0, SEEK_SET);
         struct tree_header *header = malloc(sizeof(struct tree_header));
-        size_t pos;
-        read_tree_header(header, file, &pos);
+        read_tree_header(header, file);
         uint64_t id;
         struct tuple *tpl;
 
@@ -145,8 +144,7 @@ enum crud_operation_status link_strings_to_tuple(FILE *file, struct tuple *tpl, 
 void get_types(FILE *file, uint32_t **types, size_t *size) {
     fseek(file, 0, SEEK_SET);
     struct tree_header *header = malloc(sizeof(struct tree_header));
-    size_t pos;
-    read_tree_header(header, file, &pos);
+    read_tree_header(header, file);
     uint32_t *temp_types = malloc(header->subheader->pattern_size * sizeof(uint32_t));
     for (size_t iter = 0; iter < header->subheader->pattern_size; iter++) {
         temp_types[iter] = header->pattern[iter]->header->type;
@@ -160,8 +158,7 @@ void get_types(FILE *file, uint32_t **types, size_t *size) {
 enum crud_operation_status append_to_id_array(FILE *file, uint64_t offset) {
     fseek(file, 0, SEEK_SET);
     struct tree_header *header = malloc(sizeof(struct tree_header));
-    size_t pos;
-    read_tree_header(header, file, &pos);
+    read_tree_header(header, file);
     header->id_sequence[header->subheader->cur_id] = offset;
     header->subheader->cur_id++;
     write_tree_header(file, header);
@@ -173,8 +170,7 @@ enum crud_operation_status append_to_id_array(FILE *file, uint64_t offset) {
 enum crud_operation_status remove_from_id_array(FILE *file, uint64_t id, uint64_t *offset) {
     fseek(file, 0, SEEK_SET);
     struct tree_header *header = malloc(sizeof(struct tree_header));
-    size_t pos;
-    read_tree_header(header, file, &pos);
+    read_tree_header(header, file);
     if (header->id_sequence[id] == 0)
         return CRUD_INVALID;
     else {
@@ -192,16 +188,21 @@ enum crud_operation_status remove_from_id_array(FILE *file, uint64_t id, uint64_
 enum crud_operation_status id_to_offset(FILE *file, uint64_t id, uint64_t *offset) {
     fseek(file, 0, SEEK_SET);
     struct tree_header *header = malloc(sizeof(struct tree_header));
-    size_t pos;
-    read_tree_header(header, file, &pos);
-    *offset = header->id_sequence[id];
-    return CRUD_OK;
+    read_tree_header(header, file);
+    if (header->id_sequence[id] == NULL_VALUE){
+        free(header);
+        return CRUD_INVALID;
+    }else{
+        *offset = header->id_sequence[id];
+        free(header);
+        return CRUD_OK;
+    }
+
 }
 
 enum crud_operation_status offset_to_id(FILE *file, uint64_t *id, uint64_t offset) {
     struct tree_header *header = malloc(sizeof(struct tree_header));
-    size_t pos;
-    read_tree_header(header, file, &pos);
+    read_tree_header(header, file);
     for (size_t iter = 0; iter < header->subheader->cur_id; iter++) {
         if (header->id_sequence[iter] == offset) {
             *id = iter;

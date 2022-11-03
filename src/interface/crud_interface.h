@@ -6,7 +6,6 @@ struct result_list_tuple {
     struct result_list_tuple *prev;
     struct tuple *value;
     uint64_t id;
-    struct result_list_tuple *next;
 };
 
 enum crud_operation_status add_tuple(FILE *file, uint64_t *fields, uint64_t parent_id);

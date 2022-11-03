@@ -76,7 +76,7 @@ enum file_read_status read_basic_tuple(FILE *file, struct tuple **tuple, uint64_
  * @param fpos контейнер для позиции окончания чтения файла
  * @return статус чтения
  */
-enum file_read_status read_tree_header(struct tree_header *header, FILE *file, size_t *fpos);
+enum file_read_status read_tree_header(struct tree_header *header, FILE *file);
 void print_tree_header_from_file(FILE *file);
 void print_tuple_array_from_file(FILE *file);
 enum file_read_status read_string_from_tuple(FILE *file, char **string, uint64_t pattern_size, uint64_t offset);
