@@ -169,3 +169,57 @@ enum crud_operation_status update_tuple(FILE *file, uint64_t field_number, uint6
     }
     return 0;
 }
+
+void print_tuple_array_from_file(FILE *file) {
+    struct tree_header header;
+    read_tree_header(&header, file);
+    uint32_t *fields;
+    size_t size;
+    get_types(file, &fields, &size);
+    struct tuple *cur_tuple;
+
+    for (size_t i = 0; i < header.subheader->cur_id; i++) {
+        if (header.id_sequence[i] == NULL_VALUE) continue;
+        fseek(file, header.id_sequence[i], SEEK_SET);
+        read_basic_tuple(file, &cur_tuple, size);
+        printf("--- TUPLE %3zu ---\n", i);
+        for (size_t iter = 0; iter < size; iter++) {
+            if (fields[iter] == STRING_TYPE) {
+                char *s;
+                read_string_from_tuple(file, &s, header.subheader->pattern_size, cur_tuple->data[iter]);
+                printf("%-20s %s\n", header.pattern[iter]->key_value, s);
+            } else {
+                printf("%-20s %lu\n", header.pattern[iter]->key_value, cur_tuple->data[iter]);
+            }
+        }
+
+    }
+}
+
+void print_tree_header_from_file(FILE *file) {
+    struct tree_header header;
+    read_tree_header(&header, file);
+    printf("--- SUBHEADER ---\n");
+    printf("%-20s%ld\n", "ASCII Signature: ", header.subheader->ASCII_signature);
+    printf("%-20s%ld\n", "Root Offset: ", header.subheader->root_offset);
+    printf("%-20s%ld\n", "First Sequence: ", header.subheader->first_seq);
+    printf("%-20s%ld\n", "Second Sequence: ", header.subheader->second_seq);
+    printf("%-20s%ld\n", "Current ID: ", header.subheader->cur_id);
+    printf("%-20s%ld\n", "Pattern Size: ", header.subheader->pattern_size);
+    printf("--- PATTERN ---\n");
+    for (size_t iter = 0; iter < header.subheader->pattern_size; iter++) {
+        printf("Key %3d [Type %3d]: %s\n",
+               header.pattern[iter]->header->size, header.pattern[iter]->header->type,
+               header.pattern[iter]->key_value);
+    }
+    printf("--- ID ARRAY ---\n");
+
+    size_t real_id_array_size = get_real_id_array_size(header.subheader->pattern_size, header.subheader->cur_id);
+    for (size_t iter = 0; iter < (real_id_array_size / PRINT_ID_ARRAY_LEN); iter++) {
+        for (size_t inner_iter = 0; inner_iter < PRINT_ID_ARRAY_LEN; inner_iter++) {
+            //printf("%ld", iter * PRINT_ID_ARRAY_LEN + inner_iter);
+            printf("%16lx ", header.id_sequence[iter * PRINT_ID_ARRAY_LEN + inner_iter]);
+        }
+        printf("\n");
+    }
+}
