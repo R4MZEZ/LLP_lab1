@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 //        }
 //    }
 //    if (flag == 'i'){
-//        interactive_mode(filename, pattern_size, types, pattern);
+        interactive_mode(filename, pattern_size, types, pattern);
 //    }
     return 0;
 }

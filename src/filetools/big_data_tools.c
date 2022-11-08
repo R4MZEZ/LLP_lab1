@@ -82,7 +82,7 @@ enum file_read_status read_basic_tuple(FILE *file, struct tuple **tuple, uint64_
 enum file_read_status read_string_tuple(FILE *file, struct tuple **tuple, uint64_t pattern_size) {
     union tuple_header *header = malloc(sizeof(union tuple_header));
     enum file_read_status code = read_from_file(file, header, sizeof(union tuple_header));
-    struct tuple *temp_tuple = (struct tuple *) malloc(sizeof(struct tuple));
+    struct tuple *temp_tuple = malloc(sizeof(struct tuple));
     temp_tuple->header = *header;
     free(header);
 
@@ -120,6 +120,7 @@ enum file_read_status read_string_from_tuple(FILE *file, char **string, uint64_t
         read_string_tuple(file, &temp_tuple, pattern_size);
         offset = temp_tuple->header.next;
         strncpy((*string) + rts * iter, (char *) temp_tuple->data, rts);
+        free_tuple(temp_tuple);
     }
     return 0;
 }
@@ -198,6 +199,10 @@ void free_tuple(struct tuple* tuple){
     free(tuple);
 }
 
+
+void free_result_list(struct result_list_tuple* rlt){
+//#TODO
+}
 
 
 

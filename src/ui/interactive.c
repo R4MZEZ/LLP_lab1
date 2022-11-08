@@ -4,10 +4,10 @@
 void print_help();
 
 bool isNumeric(const char *str);
+void free_splitted_str(char** str, size_t count);
+size_t split(char *str, char c, char ***arr, char end);
 
-int split(char *str, char c, char ***arr, char end);
-
-void interactive_mode(char *filename, size_t pattern_size, uint32_t *pattern_types, char **pattern_names) {
+void interactive_mode(char *filename, size_t pattern_size, const uint32_t *pattern_types, char **pattern_names) {
     FILE *f = NULL;
     if (open_exist_file(filename, &f) == OPEN_FAILED) {
         printf("File doesn't exist, should we create it? (Y/n): ");
@@ -28,7 +28,7 @@ void interactive_mode(char *filename, size_t pattern_size, uint32_t *pattern_typ
     char *input_str = NULL;
     size_t len = 0;
     size_t c;
-    char **arr = malloc(sizeof(char[30]) * 30);
+    char **arr;
     getline(&input_str, &len, stdin);
     c = split(input_str, ' ', &arr, '\n');
 
@@ -42,7 +42,6 @@ void interactive_mode(char *filename, size_t pattern_size, uint32_t *pattern_typ
                 size_t count;
                 uint64_t fields[pattern_size];
                 size_t par_pos = -1;
-                bool error = false;
 
                 if (!isNumeric(arr[1])) {
                     printf("Not-numeric parent_id.\n");
@@ -51,7 +50,6 @@ void interactive_mode(char *filename, size_t pattern_size, uint32_t *pattern_typ
                 for (size_t iter = 2; iter < pattern_size + 2; iter++) {
                     count = split(arr[iter], '=', &key_value, '\0');
                     if (count != 2) {
-                        error = true;
                         break;
                         //#TODO error code
                     }
@@ -82,9 +80,10 @@ void interactive_mode(char *filename, size_t pattern_size, uint32_t *pattern_typ
                             fields[par_pos] = atoi(key_value[1]);
                             break;
                         case STRING_TYPE:
-                            fields[par_pos] = key_value[1];
+                            fields[par_pos] = (uint64_t) key_value[1];
                             break;
                     }
+                    free_splitted_str(key_value, count);
                     par_pos = -1;
                 }
                 add_tuple(f, fields, atoi(arr[1]));
@@ -118,6 +117,7 @@ void interactive_mode(char *filename, size_t pattern_size, uint32_t *pattern_typ
 
         } else printf("Unknown command, try using 'help'\n");
 
+        free_splitted_str(arr, c);
         getline(&input_str, &len, stdin);
         c = split(input_str, ' ', &arr, '\n');
     }
@@ -147,7 +147,7 @@ bool isNumeric(const char *str) {
     return true;
 }
 
-int split(char *str, char c, char ***arr, const char end) {
+size_t split(char *str, char c, char ***arr, const char end) {
     int count = 1;
     int token_len = 1;
     int i = 0;
@@ -196,9 +196,16 @@ int split(char *str, char c, char ***arr, const char end) {
         }
         p++;
     }
-    printf("%d ", *((*arr)[1]+2));
-    printf("%s ", (*arr)[1]);
+//    printf("%d ", *((*arr)[1]+2));
+//    printf("%s ", (*arr)[1]);
 
 
     return count;
+}
+
+void free_splitted_str(char** str, size_t count){
+    for (size_t iter = 0; iter < count; iter++){
+        free(str[iter]);
+    }
+    free(str);
 }

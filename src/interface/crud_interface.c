@@ -21,7 +21,9 @@ enum crud_operation_status add_tuple(FILE *file, uint64_t *fields, uint64_t pare
     enum crud_operation_status status = insert_new_tuple(file, new_tuple, full_tuple_size, link);
     link_strings_to_tuple(file, new_tuple, *link);
     append_to_id_array(file, *link);
+    free_tuple(new_tuple);
     free(link);
+    free(types);
     return status;
 }
 
@@ -45,7 +47,9 @@ enum crud_operation_status get_tuple(FILE *file, uint64_t **fields, uint64_t id)
         } else {
             (*fields)[iter] = cur_tuple->data[iter];
         }
+        free_tuple(cur_tuple);
     }
+    free(types);
     return CRUD_OK;
 }
 
@@ -91,6 +95,7 @@ enum crud_operation_status remove_tuple(FILE *file, uint64_t id, uint8_t str_fla
         }
 
     }
+    free(types);
     return CRUD_OK;
 }
 
@@ -135,6 +140,8 @@ find_by_field(FILE *file, uint64_t field_number, uint64_t *condition, struct res
         }
 
     }
+    free_tree_header(header);
+    free(types);
     return 0;
 }
 
@@ -151,6 +158,7 @@ enum crud_operation_status find_by_parent(FILE *file, uint64_t parent_id, struct
         }
 
     }
+    free_tree_header(header);
     return 0;
 }
 
@@ -171,15 +179,17 @@ enum crud_operation_status update_tuple(FILE *file, uint64_t field_number, uint6
         fseek(file, offset, SEEK_SET);
         write_tuple(file, cur_tuple, size);
     }
+    free_tuple(cur_tuple);
+    free(types);
     return 0;
 }
 
 void print_tuple_array_from_file(FILE *file) {
     struct tree_header header;
     read_tree_header(&header, file);
-    uint32_t *fields;
+    uint32_t *types;
     size_t size;
-    get_types(file, &fields, &size);
+    get_types(file, &types, &size);
     struct tuple *cur_tuple;
 
     for (size_t i = 0; i < header.subheader->cur_id; i++) {
@@ -188,7 +198,7 @@ void print_tuple_array_from_file(FILE *file) {
         read_basic_tuple(file, &cur_tuple, size);
         printf("--- TUPLE %3zu ---\n", i);
         for (size_t iter = 0; iter < size; iter++) {
-            if (fields[iter] == STRING_TYPE) {
+            if (types[iter] == STRING_TYPE) {
                 char *s;
                 read_string_from_tuple(file, &s, header.subheader->pattern_size, cur_tuple->data[iter]);
                 printf("%-20s %s\n", header.pattern[iter]->key_value, s);
@@ -199,6 +209,7 @@ void print_tuple_array_from_file(FILE *file) {
         }
         free_tuple(cur_tuple);
     }
+    free(types);
 
 }
 
