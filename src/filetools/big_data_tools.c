@@ -106,7 +106,8 @@ static size_t how_long_string_is(FILE *file, uint64_t offset) {
         read_from_file(file, temp_header, sizeof(union tuple_header));
         len++;
     }
-    return 1;
+    free(temp_header);
+    return len;
 }
 
 enum file_read_status read_string_from_tuple(FILE *file, char **string, uint64_t pattern_size, uint64_t offset) {
@@ -156,9 +157,11 @@ enum file_write_status write_tree_header(FILE *file, struct tree_header *header)
 enum file_write_status
 init_empty_file(FILE *file, char **pattern, uint32_t *types, size_t pattern_size, size_t *key_sizes) {
     fseek(file, 0, SEEK_SET);
-    struct tree_header *header = (struct tree_header *) malloc(sizeof(struct tree_header));
+    struct tree_header *header = malloc(sizeof(struct tree_header));
     generate_empty_tree_header(pattern, types, pattern_size, key_sizes, header);
-    return write_tree_header(file, header);
+    enum file_write_status code = write_tree_header(file, header);
+    free_tree_header(header);
+    return code;
 }
 
 enum file_open_status open_file_anyway(FILE **file, char *filename) {
@@ -176,6 +179,23 @@ enum file_write_status write_tuple(FILE *file, struct tuple *tuple, size_t tuple
     free(tuple_header);
     code |= write_to_file(file, tuple->data, tuple_size);
     return code;
+}
+
+void free_tree_header(struct tree_header* header){
+    for (size_t iter = 0; iter < header->subheader->pattern_size; iter++){
+        free(header->pattern[iter]->key_value);
+        free(header->pattern[iter]->header);
+        free(header->pattern[iter]);
+    }
+    free(header->pattern);
+    free(header->id_sequence);
+    free(header->subheader);
+    free(header);
+}
+
+void free_tuple(struct tuple* tuple){
+    free(tuple->data);
+    free(tuple);
 }
 
 

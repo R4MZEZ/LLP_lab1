@@ -68,6 +68,7 @@ enum crud_operation_status swap_last_tuple_to(FILE *file, uint64_t pos_to, size_
 //                printf("PARENT\n data[1]: %lu data[0]: %lu\n", parent->data[1], parent->data[0]);
                 fseek(file, (tpl->header.prev), SEEK_SET);
                 write_tuple(file, parent, get_real_tuple_size(size));
+                free_tuple(parent);
             }
 
 //            printf("STRING\n next: %lu, prev: %lu, pos_from: %lu, pos_to: %lu\n", tpl->header.next, tpl->header.prev, pos_from, pos_to);
@@ -80,7 +81,8 @@ enum crud_operation_status swap_last_tuple_to(FILE *file, uint64_t pos_to, size_
 //            printf("TUPLE\nid: %lu, tpl1->data[1]: %lu, pos_from: %lu, pos_to: %lu\n", id, tpl->data[1], pos_from, pos_to);
         }
 
-        free(header);
+        free_tree_header(header);
+        free_tuple(tpl);
 
     }
     ftruncate(fileno(file), (long) pos_from);
@@ -215,7 +217,7 @@ enum crud_operation_status offset_to_id(FILE *file, uint64_t *id, uint64_t offse
 }
 
 enum crud_operation_status change_string_tuple(FILE *file, uint64_t offset, char *new_string, uint64_t size) {
-    struct tuple *cur_tuple = malloc(sizeof(struct tuple));
+    struct tuple *cur_tuple = NULL;
     int64_t len = strlen(new_string);
     uint64_t old_offset = offset;
     do {

@@ -30,7 +30,7 @@ static void generate_empty_pattern(struct key **key_pattern, char **pattern, uin
 }
 
 void generate_empty_tree_header(char **pattern, uint32_t *types,size_t pattern_size, size_t *key_sizes, struct tree_header *header) {
-    header->subheader = (struct tree_subheader *) malloc(sizeof(struct tree_subheader));
+    header->subheader = malloc(sizeof(struct tree_subheader));
     generate_empty_tree_subheader(header->subheader, pattern_size);
 
     header->pattern = malloc(sizeof(struct key*) * pattern_size);

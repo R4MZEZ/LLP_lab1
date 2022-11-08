@@ -39,7 +39,9 @@ enum crud_operation_status get_tuple(FILE *file, uint64_t **fields, uint64_t id)
         if (types[iter] == STRING_TYPE) {
             char *s;
             read_string_from_tuple(file, &s, size, cur_tuple->data[iter]);
-            (*fields)[iter] = (uint64_t) s;
+            //#TODO how fields are red?
+            (*fields)[iter] = s;
+
         } else {
             (*fields)[iter] = cur_tuple->data[iter];
         }
@@ -65,6 +67,7 @@ enum crud_operation_status remove_tuple(FILE *file, uint64_t id, uint8_t str_fla
                 fseek(file, (long) offset, SEEK_SET);
                 read_basic_tuple(file, &tpl, size);
                 remove_tuple(file, tpl->data[field_num], 1);
+                free_tuple(tpl);
             }
         }
 
@@ -84,6 +87,7 @@ enum crud_operation_status remove_tuple(FILE *file, uint64_t id, uint8_t str_fla
             read_string_tuple(file, &str_tpl, size);
             swap_last_tuple_to(file, id, get_real_tuple_size(size) + sizeof(union tuple_header));
             id = str_tpl->header.next;
+            free_tuple(str_tpl);
         }
 
     }
@@ -112,7 +116,7 @@ find_by_field(FILE *file, uint64_t field_number, uint64_t *condition, struct res
     uint64_t type = types[field_number];
     struct tree_header *header = malloc(sizeof(struct tree_header));
     read_tree_header(header, file);
-    struct tuple *cur_tuple = malloc(sizeof(struct tuple));
+    struct tuple *cur_tuple = NULL;
     for (size_t i = 0; i < header->subheader->cur_id; i++) {
         if (header->id_sequence[i] == NULL_VALUE) continue;
         fseek(file, header->id_sequence[i], SEEK_SET);
@@ -123,6 +127,7 @@ find_by_field(FILE *file, uint64_t field_number, uint64_t *condition, struct res
             if (!strcmp(s, (char *) condition)) {
                 append_to_result_list(&cur_tuple, i, result);
             }
+            free(s);
         } else {
             if (cur_tuple->data[field_number] == *condition) {
                 append_to_result_list(&cur_tuple, i, result);
@@ -134,19 +139,18 @@ find_by_field(FILE *file, uint64_t field_number, uint64_t *condition, struct res
 }
 
 enum crud_operation_status find_by_parent(FILE *file, uint64_t parent_id, struct result_list_tuple **result) {
-    struct tree_header header;
-    read_tree_header(&header, file);
+    struct tree_header *header = malloc(sizeof(struct tree_header));
+    read_tree_header(header, file);
     struct tuple *cur_tuple = malloc(sizeof(struct tuple));
-    for (size_t i = 0; i < header.subheader->cur_id; i++) {
-        if (header.id_sequence[i] == NULL_VALUE) continue;
-        fseek(file, header.id_sequence[i], SEEK_SET);
-        read_basic_tuple(file, &cur_tuple, header.subheader->pattern_size);
+    for (size_t i = 0; i < header->subheader->cur_id; i++) {
+        if (header->id_sequence[i] == NULL_VALUE) continue;
+        fseek(file, header->id_sequence[i], SEEK_SET);
+        read_basic_tuple(file, &cur_tuple, header->subheader->pattern_size);
         if (cur_tuple->header.parent == parent_id) {
             append_to_result_list(&cur_tuple, i, result);
         }
 
     }
-    printf("\n");
     return 0;
 }
 
@@ -188,12 +192,14 @@ void print_tuple_array_from_file(FILE *file) {
                 char *s;
                 read_string_from_tuple(file, &s, header.subheader->pattern_size, cur_tuple->data[iter]);
                 printf("%-20s %s\n", header.pattern[iter]->key_value, s);
+                free(s);
             } else {
                 printf("%-20s %lu\n", header.pattern[iter]->key_value, cur_tuple->data[iter]);
             }
         }
-
+        free_tuple(cur_tuple);
     }
+
 }
 
 void print_tree_header_from_file(FILE *file) {
