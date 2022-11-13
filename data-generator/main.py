@@ -49,7 +49,7 @@ types_generators = {"String": generate_random_string,
 parents = []
 
 if __name__ == '__main__':
-    for param in sys.argv[1:]:
+    for param in sys.argv[2:]:
         key_value = param.split('=')
         if len(key_value) != 2:
             raise ValueError("Invalid input")
@@ -59,7 +59,7 @@ if __name__ == '__main__':
             raise ValueError("Invalid type")
 
     with open('out.txt', 'w') as f:
-        for i in range(10):
+        for i in range(int(sys.argv[1])):
             f.write(generate_item(types, parents)[:-1])
             parents.append(i)
             f.write("\n")

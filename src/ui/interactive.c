@@ -159,7 +159,7 @@ size_t add_input_item(FILE *f, char **str, size_t pattern_size, const uint32_t *
             return 3;
         }
 
-
+        double val;
         switch (pattern_types[par_pos]) {
             case BOOLEAN_TYPE:
                 if (strcmp(key_value[1], "True") == 0)
@@ -172,7 +172,12 @@ size_t add_input_item(FILE *f, char **str, size_t pattern_size, const uint32_t *
                 }
                 break;
             case FLOAT_TYPE:
-                //#TODO
+                val = strtod(key_value[1], NULL);
+                if (val == 0.0) {
+                    printf("Not-float '%s' parameter.\n", key_value[1]);
+                    return 4;
+                }
+                memcpy(&fields[par_pos], &val, sizeof(val));
                 break;
             case INTEGER_TYPE:
                 if (!isNumeric(key_value[1])) {
@@ -233,6 +238,7 @@ void parse_file(FILE *to, FILE *from, size_t pattern_size, const uint32_t *patte
         free(line);
     }
     fclose(from);
+    fflush(to);
 }
 
 

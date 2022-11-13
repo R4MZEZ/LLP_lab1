@@ -203,8 +203,12 @@ void print_tuple_array_from_file(FILE *file) {
                 read_string_from_tuple(file, &s, header.subheader->pattern_size, cur_tuple->data[iter]);
                 printf("%-20s %s\n", header.pattern[iter]->key_value, s);
                 free(s);
-            } else {
+            } else if (types[iter] == INTEGER_TYPE || types[iter] == BOOLEAN_TYPE){
                 printf("%-20s %lu\n", header.pattern[iter]->key_value, cur_tuple->data[iter]);
+            } else if (types[iter] == FLOAT_TYPE){
+                double res;
+                memcpy(&res, &(cur_tuple->data[iter]), sizeof(cur_tuple->data[iter]));
+                printf("%-20s %.6f\n", header.pattern[iter]->key_value, res);
             }
         }
         free_tuple(cur_tuple);

@@ -4,10 +4,18 @@
 
 
 int main(int argc, char **argv) {
+
+//    float x = 1.2f;
+//    int i;
+//    memcpy(&i, &x, sizeof(x));
+//    float y;
+//    memcpy(&y, &i, sizeof(i));
+//    printf("%.6f\n", y);
+
     FILE *file;
     open_empty_file("simple.txt", &file);
     char *par1 = "Code";
-    char *par2 = "Name";
+    char *par2 = "Gay";
     size_t pattern_size = 2;
     char **pattern = malloc(sizeof(char *) * pattern_size);
     pattern[0] = par1;
@@ -17,7 +25,7 @@ int main(int argc, char **argv) {
     sizes[1] = 8;
     uint32_t *types = malloc(sizeof(uint32_t) * pattern_size);
     types[0] = 1;
-    types[1] = 3;
+    types[1] = 2;
     init_empty_file(file, pattern, types, pattern_size, sizes);
 
 
