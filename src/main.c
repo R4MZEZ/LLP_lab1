@@ -34,6 +34,7 @@ int main(int argc, char **argv) {
     parse_file(file, parsable, pattern_size, types, pattern);
 
 
+
 //    uint64_t fields[2];
 //    fields[0] = 1024;
 //    fields[1] = (uint64_t) "Рома";
@@ -61,7 +62,7 @@ int main(int argc, char **argv) {
 //    get_tuple(file, &fields, 0);
 //
 //    struct result_list_tuple *result = NULL;
-//    uint64_t cond = 123;
+//    uint64_t cond = 58132;
 //    find_by_field(file, 0, &cond, &result);
 //    printf("--- FIND RESULT ---\n");
 //    if (result != NULL) printf("id: %lu\n", (uint64_t) result->id);
