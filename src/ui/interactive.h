@@ -3,7 +3,10 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
 
 void interactive_mode(char *filename, size_t pattern_size, uint32_t *pattern_types, char **pattern_names);
+void parse_file(FILE *to, FILE *from, size_t pattern_size, const uint32_t *pattern_types, char **pattern_names);
+
 
 #endif

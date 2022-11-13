@@ -20,35 +20,44 @@ int main(int argc, char **argv) {
     types[1] = 3;
     init_empty_file(file, pattern, types, pattern_size, sizes);
 
-    uint64_t fields[2];
-    fields[0] = 1024;
-    fields[1] = (uint64_t) "Рома";
-    add_tuple(file, fields, 1298);
-    fields[0] = 123;
-    fields[1] = (uint64_t) "Чепух";
-    add_tuple(file, fields, 123);
-    fields[0] = 321;
-    fields[1] = (uint64_t) "Биба";
-    add_tuple(file, fields, 0);
-    fields[0] = 2;
-    fields[1] = (uint64_t) "Боба";
-    add_tuple(file, fields, 1);
+
+    FILE* parsable;
+    open_exist_file("data-generator/out.txt", &parsable);
+    parse_file(file, parsable, pattern_size, types, pattern);
+
+
+//    uint64_t fields[2];
+//    fields[0] = 1024;
+//    fields[1] = (uint64_t) "Рома";
+//    add_tuple(file, fields, 1298);
+//    fields[0] = 123;
+//    fields[1] = (uint64_t) "Чепух";
+//    add_tuple(file, fields, 123);
+//    fields[0] = 321;
+//    fields[1] = (uint64_t) "Биба";
+//    add_tuple(file, fields, 0);
+//    fields[0] = 2;
+//    fields[1] = (uint64_t) "Боба";
+//    add_tuple(file, fields, 1);
+
+//    parse_file(file, parsable, pattern_size, types, pattern);
+
 
 //    close_file(file);
 
-    remove_tuple(file, 0, 0);
+//    remove_tuple(file, 0, 0);
 
-    print_tree_header_from_file(file);
-    print_tuple_array_from_file(file);
+//    print_tree_header_from_file(file);
+//    print_tuple_array_from_file(file);
 //
 //    get_tuple(file, &fields, 0);
 //
-    struct result_list_tuple *result = NULL;
-    uint64_t cond = 123;
-    find_by_field(file, 0, &cond, &result);
-    printf("--- FIND RESULT ---\n");
-    if (result != NULL) printf("id: %lu\n", (uint64_t) result->id);
-    else printf("no result present\n");
+//    struct result_list_tuple *result = NULL;
+//    uint64_t cond = 123;
+//    find_by_field(file, 0, &cond, &result);
+//    printf("--- FIND RESULT ---\n");
+//    if (result != NULL) printf("id: %lu\n", (uint64_t) result->id);
+//    else printf("no result present\n");
 //
 //    result = NULL;
 //    find_by_field(file, 1, (uint64_t *) str, &result);
@@ -64,11 +73,11 @@ int main(int argc, char **argv) {
 //    else printf("no result present\n");
 //
 //
-    result = NULL;
-    find_by_parent(file, 1, &result);
-    printf("--- FIND RESULT ---\n");
-    if (result != NULL) printf("id: %lu\n", (uint64_t) result->id);
-    else printf("no result present\n");
+//    result = NULL;
+//    find_by_parent(file, 1, &result);
+//    printf("--- FIND RESULT ---\n");
+//    if (result != NULL) printf("id: %lu\n", (uint64_t) result->id);
+//    else printf("no result present\n");
 //
 //    result = NULL;
 //    find_by_parent(file, 1298, &result);
@@ -79,10 +88,9 @@ int main(int argc, char **argv) {
 //    cond = 10;
 //    update_tuple(file, 0, &cond, 0);
 //
-    char *new_string = "Точно не Чепух";
-    update_tuple(file, 1, (uint64_t *) new_string, 1);
+//    char *new_string = "Точно не Чепух";
+//    update_tuple(file, 1, (uint64_t *) new_string, 1);
 //
-    print_tuple_array_from_file(file);
 
     int flag = 0;
     char* filename = "simple.txt";
@@ -107,4 +115,5 @@ int main(int argc, char **argv) {
 //    }
     return 0;
 }
+
 

@@ -4,8 +4,10 @@
 void print_help();
 
 bool isNumeric(const char *str);
-void free_splitted_str(char** str, size_t count);
-size_t split(char *str, char c, char ***arr, char end);
+
+size_t split(char *str, char c, char ***arr);
+
+size_t add_input_item(FILE *f, char **str, size_t pattern_size, const uint32_t *pattern_types, char **pattern_names);
 
 void interactive_mode(char *filename, size_t pattern_size, const uint32_t *pattern_types, char **pattern_names) {
     FILE *f = NULL;
@@ -30,64 +32,22 @@ void interactive_mode(char *filename, size_t pattern_size, const uint32_t *patte
     size_t c;
     char **arr;
     getline(&input_str, &len, stdin);
-    c = split(input_str, ' ', &arr, '\n');
+//    printf("'%s'\n", input_str);
+    c = split(input_str, ' ', &arr);
 
     while (strcmp(arr[0], "exit") != 0) {
-        printf("'%s' '%s' '%s'\n", arr[0], arr[1], arr[2]);
+//        printf("'%s' '%s' '%s'\n", arr[0], arr[1], arr[2]);
         if (strcmp(arr[0], "help") == 0) print_help();
 
         else if (strcmp(arr[0], "add") == 0) {
             if (c == pattern_size + 2) {
-                char **key_value;
-                size_t count;
-                uint64_t fields[pattern_size];
-                size_t par_pos = -1;
-
-                if (!isNumeric(arr[1])) {
-                    printf("Not-numeric parent_id.\n");
-                    break;
+                size_t code = add_input_item(f, arr, pattern_size, pattern_types, pattern_names);
+                if (code != 0) {
+                    printf("Error code: %zu\n", code);
                 }
-                for (size_t iter = 2; iter < pattern_size + 2; iter++) {
-                    count = split(arr[iter], '=', &key_value, '\0');
-                    if (count != 2) {
-                        break;
-                        //#TODO error code
-                    }
-                    for (size_t in_iter = 0; in_iter < pattern_size; in_iter++) {
-                        if (strcmp(key_value[0], pattern_names[in_iter]) == 0) {
-                            par_pos = in_iter;
-                            break;
-                        }
-                    }
-                    if (par_pos == -1) {
-                        printf("'%s' field does not match pattern.\n", arr[iter]);
-                        break;
-                    }
-
-
-                    switch (pattern_types[par_pos]) {
-                        case BOOLEAN_TYPE:
-                            //#TODO
-                            break;
-                        case FLOAT_TYPE:
-                            //#TODO
-                            break;
-                        case INTEGER_TYPE:
-                            if (!isNumeric(key_value[1])) {
-                                printf("Not-numeric '%s' parameter.\n", key_value[1]);
-                                break;
-                            }
-                            fields[par_pos] = atoi(key_value[1]);
-                            break;
-                        case STRING_TYPE:
-                            fields[par_pos] = (uint64_t) key_value[1];
-                            break;
-                    }
-                    free_splitted_str(key_value, count);
-                    par_pos = -1;
-                }
-                add_tuple(f, fields, atoi(arr[1]));
-            } else printf("Wrong number of parameters(including parent_id): %lu expected, %lu entered.\n", pattern_size+1, c-1);
+            } else
+                printf("Wrong number of parameters(including parent_id): %lu expected, %lu entered.\n",
+                       pattern_size + 1, c - 1);
 
         } else if (strcmp(arr[0], "update") == 0) printf("не торопи события сынок\n");
 
@@ -117,9 +77,9 @@ void interactive_mode(char *filename, size_t pattern_size, const uint32_t *patte
 
         } else printf("Unknown command, try using 'help'\n");
 
-        free_splitted_str(arr, c);
+        free(arr);
         getline(&input_str, &len, stdin);
-        c = split(input_str, ' ', &arr, '\n');
+        c = split(input_str, ' ', &arr);
     }
     close_file(f);
 }
@@ -147,15 +107,13 @@ bool isNumeric(const char *str) {
     return true;
 }
 
-size_t split(char *str, char c, char ***arr, const char end) {
+size_t split(char *str, const char c, char ***arr) {
     int count = 1;
-    int token_len = 1;
     int i = 0;
     char *p;
-    char *t;
 
     p = str;
-    while (*p != end) {
+    while (*p != '\n' && *p != '\0') {
         if (*p == c)
             count++;
         p++;
@@ -165,47 +123,117 @@ size_t split(char *str, char c, char ***arr, const char end) {
     if (*arr == NULL)
         exit(1);
 
-    p = str;
-    while (*p != end) {
-        if (*p == c) {
-            (*arr)[i] = (char *) malloc(sizeof(char) * token_len);
-            if ((*arr)[i] == NULL)
-                exit(1);
 
-            token_len = 0;
-            i++;
-        }
-        p++;
-        token_len++;
+    for (char *pch = strtok(str, &c); pch != NULL; pch = strtok(NULL, &c)) {
+        if (i == count - 1 && pch[strlen(pch) - 1] == '\n')
+            pch[strlen(pch) - 1] = '\0';
+        (*arr)[i++] = pch;
     }
-    (*arr)[i] = (char *) malloc(sizeof(char) * token_len);
-    if ((*arr)[i] == NULL)
-        exit(1);
-
-    i = 0;
-    p = str;
-    t = ((*arr)[i]);
-    while (*p != end) {
-        if (*p != c && *p != end) {
-            *t = *p;
-            t++;
-        } else {
-            *t = '\0';
-            i++;
-            t = ((*arr)[i]);
-        }
-        p++;
-    }
-//    printf("%d ", *((*arr)[1]+2));
-//    printf("%s ", (*arr)[1]);
-
 
     return count;
 }
 
-void free_splitted_str(char** str, size_t count){
-    for (size_t iter = 0; iter < count; iter++){
-        free(str[iter]);
+size_t add_input_item(FILE *f, char **str, size_t pattern_size, const uint32_t *pattern_types, char **pattern_names) {
+    char **key_value;
+    size_t count;
+    uint64_t fields[pattern_size];
+    size_t par_pos = -1;
+
+    if (!isNumeric(str[1])) {
+        printf("Not-numeric parent_id.\n");
+        return 1;
     }
-    free(str);
+    for (size_t iter = 2; iter < pattern_size + 2; iter++) {
+        count = split(str[iter], '=', &key_value);
+        if (count != 2) {
+            return 2;
+        }
+        for (size_t in_iter = 0; in_iter < pattern_size; in_iter++) {
+            if (strcmp(key_value[0], pattern_names[in_iter]) == 0) {
+                par_pos = in_iter;
+                break;
+            }
+        }
+        if (par_pos == -1) {
+            printf("'%s' field does not match pattern.\n", str[iter]);
+            return 3;
+        }
+
+
+        switch (pattern_types[par_pos]) {
+            case BOOLEAN_TYPE:
+                if (strcmp(key_value[1], "True") == 0)
+                    fields[par_pos] = true;
+                else if (strcmp(key_value[1], "False") == 0)
+                    fields[par_pos] = false;
+                else{
+                    printf("Not-bool '%s' parameter.\n", key_value[1]);
+                    return 4;
+                }
+                break;
+            case FLOAT_TYPE:
+                //#TODO
+                break;
+            case INTEGER_TYPE:
+                if (!isNumeric(key_value[1])) {
+                    printf("Not-integer '%s' parameter.\n", key_value[1]);
+                    return 4;
+                }
+                fields[par_pos] = atoi(key_value[1]);
+                break;
+            case STRING_TYPE:
+                fields[par_pos] = (uint64_t) key_value[1];
+                break;
+        }
+        free(key_value);
+        par_pos = -1;
+    }
+    add_tuple(f, fields, atoi(str[1]));
+    return 0;
 }
+
+char *readln(FILE *stream) {
+    static char *str = NULL;
+    static size_t i = 0;
+    int ch = fgetc(stream);
+
+    if ((ch == '\n') || (ch == EOF)) {
+        str = malloc(i + 1);
+        str[i] = 0;
+    } else {
+        i++;
+        readln(stream);
+        str[--i] = ch;
+    }
+    return str;
+}
+
+char *concat(const char *s1, const char *s2) {
+    char *result = malloc(strlen(s1) + strlen(s2) + 1);
+    strcpy(result, s1);
+    strcat(result, s2);
+    return result;
+}
+
+void parse_file(FILE *to, FILE *from, size_t pattern_size, const uint32_t *pattern_types, char **pattern_names) {
+    char *line = NULL;
+    char **args = NULL;
+
+    while (!feof(from)) {
+        line = readln(from);
+        if (strcmp(line, "") == 0)
+            break;
+        line[strlen(line) - 1] = '\0';
+        char *prefix = concat("add ", line);
+        split(prefix, ' ', &args);
+        size_t code = add_input_item(to, args, pattern_size, pattern_types, pattern_names);
+        if (code != 0) {
+            printf("Error code %zu\n In line: %s\n", code, line);
+        }
+        free(line);
+    }
+    fclose(from);
+}
+
+
+
