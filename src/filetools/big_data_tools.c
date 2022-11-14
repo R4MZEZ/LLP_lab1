@@ -178,6 +178,7 @@ enum file_write_status write_tuple(FILE *file, struct tuple *tuple, size_t tuple
     *tuple_header = tuple->header;
     enum file_write_status code = write_to_file(file, tuple_header, sizeof(union tuple_header));
     free(tuple_header);
+
     code |= write_to_file(file, tuple->data, tuple_size);
     return code;
 }

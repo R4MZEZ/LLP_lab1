@@ -41,9 +41,12 @@ void interactive_mode(char *filename, size_t pattern_size, uint32_t *pattern_typ
                 printf("Wrong number of parameters(including parent_id): %lu expected, %lu entered.\n",
                        pattern_size + 1, c - 1);
 
-        } else if (strcmp(arr[0], "update") == 0) printf("не торопи события сынок\n");
-
-        else if (strcmp(arr[0], "remove") == 0) {
+        } else if (strcmp(arr[0], "update") == 0) {
+            size_t code = update_item(f, arr, pattern_size, pattern_types, pattern_names, c);
+            if (code != 0) {
+                printf("Error code: %zu\n", code);
+            }
+        } else if (strcmp(arr[0], "remove") == 0) {
             if (c == 2) {
                 if (isNumeric(arr[1])) {
                     if (remove_tuple(f, atoi(arr[1]), 0) == CRUD_INVALID)

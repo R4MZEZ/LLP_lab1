@@ -175,9 +175,12 @@ enum crud_operation_status update_tuple(FILE *file, uint64_t field_number, uint6
     if (type == STRING_TYPE) {
         change_string_tuple(file, cur_tuple->data[field_number], (char *) new_value, get_real_tuple_size(size));
     } else {
-        cur_tuple->data[field_number] = *new_value;
+
+        memcpy(&(cur_tuple->data[field_number]),new_value,sizeof(*new_value));
+//        cur_tuple->data[field_number] = *new_value;
         fseek(file, offset, SEEK_SET);
-        write_tuple(file, cur_tuple, size);
+
+        write_tuple(file, cur_tuple, get_real_tuple_size(size));
     }
     free_tuple(cur_tuple);
     free(types);
