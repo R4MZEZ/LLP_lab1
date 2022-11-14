@@ -41,14 +41,14 @@ enum crud_operation_status get_tuple(FILE *file, uint64_t **fields, uint64_t id)
         if (types[iter] == STRING_TYPE) {
             char *s;
             read_string_from_tuple(file, &s, size, cur_tuple->data[iter]);
-            //#TODO how fields are red?
-            (*fields)[iter] = s;
+            (*fields)[iter] = (uint64_t) s;
 
         } else {
             (*fields)[iter] = cur_tuple->data[iter];
         }
-        free_tuple(cur_tuple);
+
     }
+    free_tuple(cur_tuple);
     free(types);
     return CRUD_OK;
 }
