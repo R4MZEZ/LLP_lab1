@@ -4,9 +4,14 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
+#include "../interface/crud_interface.h"
+#include <stdbool.h>
+#include "commands/add_command.h"
+#include "commands/find_by_command.h"
+#include "commands/help_command.h"
+
 
 void interactive_mode(char *filename, size_t pattern_size, uint32_t *pattern_types, char **pattern_names);
-void parse_file(FILE *to, FILE *from, size_t pattern_size, const uint32_t *pattern_types, char **pattern_names);
 
 
 #endif

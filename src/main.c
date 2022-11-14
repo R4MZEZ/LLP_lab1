@@ -5,13 +5,6 @@
 
 int main(int argc, char **argv) {
 
-//    float x = 1.2f;
-//    int i;
-//    memcpy(&i, &x, sizeof(x));
-//    float y;
-//    memcpy(&y, &i, sizeof(i));
-//    printf("%.6f\n", y);
-
     FILE *file;
     open_empty_file("simple.txt", &file);
     char *par1 = "Code";
