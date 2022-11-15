@@ -7,7 +7,7 @@
 char *readln(FILE *stream);
 char *concat(const char *s1, const char *s2);
 bool isNumeric(const char *str);
-size_t split(char *str, const char c, char ***arr);
-void parse_file(FILE *to, FILE *from, size_t pattern_size, const uint32_t *pattern_types, char **pattern_names);
+size_t split(char *str, char c, char ***arr);
+void parse_file(FILE *to, FILE *from);
 
 #endif

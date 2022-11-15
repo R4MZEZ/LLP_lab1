@@ -58,9 +58,22 @@ bool isNumeric(const char *str) {
     return true;
 }
 
-void parse_file(FILE *to, FILE *from, size_t pattern_size, const uint32_t *pattern_types, char **pattern_names) {
+void parse_file(FILE *to, FILE *from) {
     char *line = NULL;
     char **args = NULL;
+    size_t pattern_size;
+    struct tree_header *header = malloc(sizeof(struct tree_header));
+
+    read_tree_header(header, to);
+    pattern_size = header->subheader->pattern_size;
+    uint32_t *pattern_types = malloc(sizeof(uint32_t) * pattern_size);
+    char **pattern_names = malloc(sizeof(char *) * pattern_size);
+
+    for (int i = 0; i < pattern_size; i++) {
+        pattern_types[i] = header->pattern[i]->header->type;
+        pattern_names[i] = header->pattern[i]->key_value;
+    }
+
 
     while (!feof(from)) {
         line = readln(from);
@@ -77,4 +90,7 @@ void parse_file(FILE *to, FILE *from, size_t pattern_size, const uint32_t *patte
     }
     fclose(from);
     fflush(to);
+    free_tree_header(header);
+    free(pattern_types);
+    free(pattern_names);
 }

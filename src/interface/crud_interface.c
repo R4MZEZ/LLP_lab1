@@ -4,25 +4,24 @@ enum crud_operation_status add_tuple(FILE *file, uint64_t *fields, uint64_t pare
     uint32_t *types;
     size_t size;
     get_types(file, &types, &size);
-    struct tuple *new_tuple = malloc(sizeof(struct tuple));
-    union tuple_header new_tuple_header = {.parent = parent_id, .alloc = (uint64_t) new_tuple};
+    struct tuple* new_tuple = malloc(sizeof(struct tuple));
+    union tuple_header new_tuple_header = {.parent = parent_id, .alloc = new_tuple};
     new_tuple->header = new_tuple_header;
-    new_tuple->data = malloc(size);
-    uint64_t *link = malloc(sizeof(uint64_t));
+    new_tuple->data = malloc(sizeof(uint64_t) * size);
+    uint64_t link;
     for (size_t iter = 0; iter < size; iter++) {
         if (types[iter] == STRING_TYPE) {
-            insert_string_tuple(file, (char *) fields[iter], get_real_tuple_size(size), link);
-            new_tuple->data[iter] = *link;
+            insert_string_tuple(file, (char *) fields[iter], get_real_tuple_size(size), &link);
+            new_tuple->data[iter] = link;
         } else {
             new_tuple->data[iter] = (uint64_t) fields[iter];
         }
     }
     size_t full_tuple_size = sizeof(union tuple_header) + get_real_tuple_size(size);
-    enum crud_operation_status status = insert_new_tuple(file, new_tuple, full_tuple_size, link);
-    link_strings_to_tuple(file, new_tuple, *link);
-    append_to_id_array(file, *link);
+    enum crud_operation_status status = insert_new_tuple(file, new_tuple, full_tuple_size, &link);
+    link_strings_to_tuple(file, new_tuple, link);
+    append_to_id_array(file, link);
     free_tuple(new_tuple);
-    free(link);
     free(types);
     return status;
 }
@@ -176,7 +175,7 @@ enum crud_operation_status update_tuple(FILE *file, uint64_t field_number, uint6
         change_string_tuple(file, cur_tuple->data[field_number], (char *) new_value, get_real_tuple_size(size));
     } else {
 
-        memcpy(&(cur_tuple->data[field_number]),new_value,sizeof(*new_value));
+        memcpy(&(cur_tuple->data[field_number]), new_value, sizeof(*new_value));
 //        cur_tuple->data[field_number] = *new_value;
         fseek(file, offset, SEEK_SET);
 
@@ -206,9 +205,9 @@ void print_tuple_array_from_file(FILE *file) {
                 read_string_from_tuple(file, &s, header.subheader->pattern_size, cur_tuple->data[iter]);
                 printf("%-20s %s\n", header.pattern[iter]->key_value, s);
                 free(s);
-            } else if (types[iter] == INTEGER_TYPE || types[iter] == BOOLEAN_TYPE){
+            } else if (types[iter] == INTEGER_TYPE || types[iter] == BOOLEAN_TYPE) {
                 printf("%-20s %lu\n", header.pattern[iter]->key_value, cur_tuple->data[iter]);
-            } else if (types[iter] == FLOAT_TYPE){
+            } else if (types[iter] == FLOAT_TYPE) {
                 double res;
                 memcpy(&res, &(cur_tuple->data[iter]), sizeof(cur_tuple->data[iter]));
                 printf("%-20s %.6f\n", header.pattern[iter]->key_value, res);

@@ -1,18 +1,19 @@
 #include "interactive.h"
 
-void interactive_mode(char *filename, size_t pattern_size, uint32_t *pattern_types, char **pattern_names) {
-    FILE *f = NULL;
-    if (open_exist_file(filename, &f) == OPEN_FAILED) {
-        printf("File doesn't exist, should we create it? (Y/n): ");
-        char str[1];
-        int res = scanf("%s", str);
-        while (strcmp(str, "Y") != 0) {
-            if (strcmp(str, "n") == 0 || res == EOF) return;
-            printf("Incorrect input (Y/n): ");
-            res = scanf("%s", str);
-        }
-        open_new_file(filename, &f);
+void interactive_mode(FILE *f) {
+    size_t pattern_size;
+    struct tree_header *header = malloc(sizeof(struct tree_header));
+
+    read_tree_header(header, f);
+    pattern_size = header->subheader->pattern_size;
+    uint32_t *pattern_types = malloc(sizeof(uint32_t) * pattern_size);
+    char **pattern_names = malloc(sizeof(char *) * pattern_size);
+
+    for (int i = 0; i < pattern_size; i++) {
+        pattern_types[i] = header->pattern[i]->header->type;
+        pattern_names[i] = header->pattern[i]->key_value;
     }
+
 
     printf("File opened successfully!\n");
     printf("Type 'help' for available commands info.\n");
@@ -23,11 +24,9 @@ void interactive_mode(char *filename, size_t pattern_size, uint32_t *pattern_typ
     size_t c;
     char **arr;
     getline(&input_str, &len, stdin);
-//    printf("'%s'\n", input_str);
     c = split(input_str, ' ', &arr);
 
     while (strcmp(arr[0], "exit") != 0) {
-//        printf("'%s' '%s' '%s'\n", arr[0], arr[1], arr[2]);
         if (strcmp(arr[0], "help") == 0) print_help();
         else if (strcmp(arr[0], "find_by") == 0) {
             find_by(f, arr, pattern_size, pattern_types, pattern_names, c);
