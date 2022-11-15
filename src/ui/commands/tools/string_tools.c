@@ -100,12 +100,4 @@ void parse_file(FILE *to, FILE *from) {
     free(pattern_types);
     free(pattern_names);
 
-    for (int i = 1; i < 51; i++) {
-        clock_t start = clock();
-        remove_tuple(to, i, 0);
-        clock_t end = clock();
-        printf("%f\n", (double) (end - start) / CLOCKS_PER_SEC);
-
-    }
-
 }

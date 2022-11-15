@@ -72,23 +72,12 @@ size_t add_input_item(FILE *f, char **str, size_t pattern_size, const uint32_t *
         free(key_value);
 
     }
-    add_tuple(f, fields, 0);
-
-    for (int j = 0; j < 50; j++) {
-        add_tuple(f, fields, 0);
-    }
-    for (int j = 1; j < 51; j++) {
-        printf("%d\n",j);
-        for (int i = 0; i < j; i++) {
-            add_tuple(f, fields, j);
-        }
-    }
-//    clock_t start = clock();
+    clock_t start = clock();
+    add_tuple(f, fields, atoi(str[1]));
 //    find_by_field(f, test_pos, &test_value, &result);
 //    remove_tuple(f, id, 0);
-//    clock_t end = clock();
-//    printf("%f\n", (double) (end - start) / CLOCKS_PER_SEC);
-//    add_tuple(f, fields, atoi(str[1]));
+    clock_t end = clock();
+    printf("%f\n", (double) (end - start) / CLOCKS_PER_SEC);
 
     return 0;
 }

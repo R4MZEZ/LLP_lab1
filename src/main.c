@@ -31,6 +31,7 @@ int main(int argc, char **argv) {
         case 'n':
             open_empty_file(main_filename, &file);
             init_file(file);
+
             break;
         case 'p':
             open_exist_file(arg_filename, &parsable);
