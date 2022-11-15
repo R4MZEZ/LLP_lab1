@@ -1,4 +1,4 @@
-# Low_Level_Programming_lab_1
+# Low-level programming lab#1
 
 Способ запуска:
 make clean
@@ -6,6 +6,10 @@ make build
 ./main [flags] [filename] [parse-file]
 
 Доступные флаги:
+
 -n : создать новый файл с именем <filename> и запустить инициализацию паттерна.
+  
 -o : открыть существующий файл с именем <filename> и войти в интерактивный режим.
+  
 -p : создать новый файл с именем <filename>, запросить инициализацию паттерна и наполнить данными из файла <parse-file>
+  
