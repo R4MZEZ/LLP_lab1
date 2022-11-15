@@ -73,12 +73,13 @@ size_t add_input_item(FILE *f, char **str, size_t pattern_size, const uint32_t *
 
     }
     size_t id = add_tuple(f, fields, atoi(str[1]));
-    struct result_list_tuple *result = NULL;
-    uint64_t *list = NULL;
+//    struct result_list_tuple *result = NULL;
+//    uint64_t *list = NULL;
 
     clock_t start = clock();
 
-    get_tuple(f, &list, id);
+//    get_tuple(f, &list, id);
+    update_tuple(f, test_pos, &test_value, id);
 //    find_by_field(f, test_pos, &test_value, &result);
 //    remove_tuple(f, id, 0);
     clock_t end = clock();
