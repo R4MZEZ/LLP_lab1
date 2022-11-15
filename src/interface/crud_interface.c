@@ -1,6 +1,6 @@
 #include "crud_interface.h"
 
-enum crud_operation_status add_tuple(FILE *file, uint64_t *fields, uint64_t parent_id) {
+size_t add_tuple(FILE *file, uint64_t *fields, uint64_t parent_id) {
     uint32_t *types;
     size_t size;
     get_types(file, &types, &size);
@@ -20,10 +20,10 @@ enum crud_operation_status add_tuple(FILE *file, uint64_t *fields, uint64_t pare
     size_t full_tuple_size = sizeof(union tuple_header) + get_real_tuple_size(size);
     enum crud_operation_status status = insert_new_tuple(file, new_tuple, full_tuple_size, &link);
     link_strings_to_tuple(file, new_tuple, link);
-    append_to_id_array(file, link);
+    size_t id = append_to_id_array(file, link);
     free_tuple(new_tuple);
     free(types);
-    return status;
+    return id;
 }
 
 enum crud_operation_status get_tuple(FILE *file, uint64_t **fields, uint64_t id) {
@@ -56,6 +56,7 @@ enum crud_operation_status remove_tuple(FILE *file, uint64_t id, uint8_t str_fla
     uint32_t *types;
     size_t size;
     get_types(file, &types, &size);
+//    printf("%lu\n", id);
 
     if (!str_flag) {
         uint64_t offset;

@@ -1,20 +1,23 @@
 CC=gcc
+CFLAGS=--std=c17 -Wall -pedantic -Isrc/ -ggdb -Wextra -Werror -DDEBUG -g3
 
 BUILDDIR=build
 SRCDIR=src
 TARGETDIR=.
 
-SOURCES=C:\Users\User\Desktop\llp\Low_Level_Programming_lab_1\src\main.c C:\Users\User\Desktop\llp\Low_Level_Programming_lab_1\src\filetools\basic_file_manager.c C:\Users\User\Desktop\llp\Low_Level_Programming_lab_1\src\filetools\big_data_tools.c C:\Users\User\Desktop\llp\Low_Level_Programming_lab_1\src\generator\empty_generator.c C:\Users\User\Desktop\llp\Low_Level_Programming_lab_1\src\interface\basic_crud.c C:\Users\User\Desktop\llp\Low_Level_Programming_lab_1\src\interface\crud_interface.c C:\Users\User\Desktop\llp\Low_Level_Programming_lab_1\src\ui\interactive.c C:\Users\User\Desktop\llp\Low_Level_Programming_lab_1\src\ui\commands\add_command.c C:\Users\User\Desktop\llp\Low_Level_Programming_lab_1\src\ui\commands\find_by_command.c C:\Users\User\Desktop\llp\Low_Level_Programming_lab_1\src\ui\commands\help_command.c C:\Users\User\Desktop\llp\Low_Level_Programming_lab_1\src\ui\commands\update_command.c C:\Users\User\Desktop\llp\Low_Level_Programming_lab_1\src\ui\commands\tools\string_tools.c
+SOURCES=$(shell find ./$(SRCDIR) -name "*.c")
 EXECUTABLE=main
 
 .PHONY: all
 all: build run
+
 run:
 	./$(EXECUTABLE)
 
-build: $(EXECUTABLE)
+build: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(SOURCES)
 	$(CC) $(SOURCES) -o $@
+
 clean:
 	rm -rf $(BUILDDIR) $(EXECUTABLE)

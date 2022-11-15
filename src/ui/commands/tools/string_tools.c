@@ -81,16 +81,31 @@ void parse_file(FILE *to, FILE *from) {
             break;
         line[strlen(line) - 1] = '\0';
         char *prefix = concat("add ", line);
+//        printf("before: %s\n", prefix);
         split(prefix, ' ', &args);
+//        printf("after: %s\n", args[3]);
+
         size_t code = add_input_item(to, args, pattern_size, pattern_types, pattern_names);
         if (code != 0) {
             printf("Error code %zu\n In line: %s\n", code, line);
         }
         free(line);
     }
+
+
+
     fclose(from);
     fflush(to);
     free_tree_header(header);
     free(pattern_types);
     free(pattern_names);
+
+    for (int i = 1; i < 51; i++) {
+        clock_t start = clock();
+        remove_tuple(to, i, 0);
+        clock_t end = clock();
+        printf("%f\n", (double) (end - start) / CLOCKS_PER_SEC);
+
+    }
+
 }

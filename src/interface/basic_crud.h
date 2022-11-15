@@ -32,7 +32,7 @@ enum crud_operation_status insert_string_tuple(FILE *file, char *string, size_t 
 enum crud_operation_status insert_new_tuple(FILE *file, struct tuple *tuple, size_t full_tuple_size, uint64_t *tuple_pos);
 void get_types(FILE *file, uint32_t **types, size_t *size);
 enum crud_operation_status change_parameter(FILE *file, enum tree_subheader_parameter parameter, uint64_t value);
-enum crud_operation_status append_to_id_array(FILE *file, uint64_t offset);
+size_t append_to_id_array(FILE *file, uint64_t offset);
 enum crud_operation_status remove_from_id_array(FILE *file, uint64_t id, uint64_t* offset);
 enum crud_operation_status id_to_offset(FILE *file, uint64_t id, uint64_t* offset);
 enum crud_operation_status offset_to_id(FILE *file, uint64_t* id, uint64_t offset);

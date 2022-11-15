@@ -161,15 +161,17 @@ void get_types(FILE *file, uint32_t **types, size_t *size) {
 }
 
 
-enum crud_operation_status append_to_id_array(FILE *file, uint64_t offset) {
+size_t append_to_id_array(FILE *file, uint64_t offset) {
+    size_t id;
     fseek(file, 0, SEEK_SET);
     struct tree_header *header = malloc(sizeof(struct tree_header));
     read_tree_header(header, file);
     header->id_sequence[header->subheader->cur_id] = offset;
     header->subheader->cur_id++;
+    id = header->subheader->cur_id - 1;
     write_tree_header(file, header);
     free_tree_header(header);
-    return 0;
+    return id;
 }
 
 
