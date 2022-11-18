@@ -17,4 +17,4 @@ build: $(EXECUTABLE)
 $(EXECUTABLE): $(SOURCES)
 	$(CC) $(SOURCES) -o $@
 clean:
-	rm -rf $(BUILDDIR) $(EXECUTABLE)
+	del -rf $(BUILDDIR) $(EXECUTABLE)

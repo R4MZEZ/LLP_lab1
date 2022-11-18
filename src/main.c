@@ -78,4 +78,5 @@ void init_file(FILE *file) {
     free(sizes);
     free(types);
 
+
 }

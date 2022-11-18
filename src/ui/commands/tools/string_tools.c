@@ -50,7 +50,7 @@ size_t split(char *str, const char c, char ***arr) {
 }
 
 bool isNumeric(const char *str) {
-    while (*str != '\0') {
+    while (*str != '\0' && *str != 13) {
         if (*str < '0' || *str > '9')
             return false;
         str++;
@@ -59,7 +59,7 @@ bool isNumeric(const char *str) {
 }
 
 void parse_file(FILE *to, FILE *from) {
-    char *line = NULL;
+    char line[1024];
     char **args = NULL;
     size_t pattern_size;
     struct tree_header *header = malloc(sizeof(struct tree_header));
@@ -76,20 +76,19 @@ void parse_file(FILE *to, FILE *from) {
 
 
     while (!feof(from)) {
-        line = readln(from);
+//        line = readln(from);
+        char* res = fgets(line,1024,from);
+        printf("%ld\n", (uint64_t) res);
         if (strcmp(line, "") == 0)
             break;
         line[strlen(line) - 1] = '\0';
         char *prefix = concat("add ", line);
-//        printf("before: %s\n", prefix);
         split(prefix, ' ', &args);
-//        printf("after: %s\n", args[3]);
-
         size_t code = add_input_item(to, args, pattern_size, pattern_types, pattern_names);
         if (code != 0) {
             printf("Error code %zu\n In line: %s\n", code, line);
         }
-        free(line);
+//        free(line);
     }
 
 
@@ -100,12 +99,5 @@ void parse_file(FILE *to, FILE *from) {
     free(pattern_types);
     free(pattern_names);
 
-    for (int i = 1; i < 51; i++) {
-        clock_t start = clock();
-        remove_tuple(to, i, 0);
-        clock_t end = clock();
-        printf("%f\n", (double) (end - start) / CLOCKS_PER_SEC);
-
-    }
 
 }

@@ -97,7 +97,9 @@ insert_new_tuple(FILE *file, struct tuple *tuple, size_t full_tuple_size, uint64
     *tuple_pos = ftell(file);
     int fd = fileno(file);
     ftruncate(fd, ftell(file) + full_tuple_size);
-    return (enum crud_operation_status) write_tuple(file, tuple, full_tuple_size - sizeof(union tuple_header));
+    enum file_write_status status = write_tuple(file, tuple, full_tuple_size - sizeof(union tuple_header));
+    return status == WRITE_OK ? CRUD_OK : CRUD_INVALID;
+    return 0;
 }
 
 

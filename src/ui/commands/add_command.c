@@ -6,15 +6,11 @@ size_t add_input_item(FILE *f, char **str, size_t pattern_size, const uint32_t *
     uint64_t fields[pattern_size];
     size_t par_pos = -1;
 
-    size_t test_pos;
-    uint64_t test_value;
-
     if (!isNumeric(str[1])) {
         printf("Not-numeric id.\n");
         return 1;
     }
     for (size_t iter = 2; iter < pattern_size + 2; iter++) {
-//        printf("%s\n", str[iter]);
         count = split(str[iter], '=', &key_value);
         if (count != 2) {
             return 2;
@@ -38,57 +34,34 @@ size_t add_input_item(FILE *f, char **str, size_t pattern_size, const uint32_t *
                 else if (strcmp(key_value[1], "False") == 0)
                     fields[par_pos] = false;
                 else {
-                    printf("Not-bool '%s' parameter.\n", key_value[1]);
+                    printf("Not-bool %s\n", key_value[1]);
                     return 4;
                 }
                 break;
             case FLOAT_TYPE:
                 val = strtod(key_value[1], NULL);
                 if (val == 0.0) {
-                    printf("Not-float '%s' parameter.\n", key_value[1]);
+                    printf("Not-float %s\n", key_value[1]);
                     return 4;
                 }
                 memcpy(&fields[par_pos], &val, sizeof(val));
                 break;
             case INTEGER_TYPE:
                 if (!isNumeric(key_value[1])) {
-                    printf("Not-integer '%s' parameter.\n", key_value[1]);
+                    printf("Not-integer %s\n", key_value[1]);
                     return 4;
                 }
                 fields[par_pos] = atoi(key_value[1]);
-                test_pos = par_pos;
-                test_value = atoi(key_value[1]);
                 break;
             case STRING_TYPE:
                 fields[par_pos] = (uint64_t) key_value[1];
                 break;
         }
 
-
-
-
         par_pos = -1;
-
         free(key_value);
 
     }
-    add_tuple(f, fields, 0);
-
-    for (int j = 0; j < 50; j++) {
-        add_tuple(f, fields, 0);
-    }
-    for (int j = 1; j < 51; j++) {
-        printf("%d\n",j);
-        for (int i = 0; i < j; i++) {
-            add_tuple(f, fields, j);
-        }
-    }
-//    clock_t start = clock();
-//    find_by_field(f, test_pos, &test_value, &result);
-//    remove_tuple(f, id, 0);
-//    clock_t end = clock();
-//    printf("%f\n", (double) (end - start) / CLOCKS_PER_SEC);
-//    add_tuple(f, fields, atoi(str[1]));
-
+    add_tuple(f, fields, atoi(str[1]));
     return 0;
 }

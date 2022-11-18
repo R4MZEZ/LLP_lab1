@@ -200,7 +200,37 @@ void free_tuple(struct tuple* tuple){
     free(tuple->data);
     free(tuple);
 }
+struct map_data {
+    void *ptr;
+    size_t size;
+};
 
+struct map_data map[10000] = {0};
+size_t glob_size = 0;
+size_t iter = 0;
+
+void *malloc_test(size_t size){
+    glob_size += size;
+    void *ptr = malloc(size);
+    map[iter].ptr = ptr;
+    map[iter++].size = size;
+    return ptr;
+}
+
+void free_test(void *ptr){
+    free(ptr);
+    for(size_t i = 0; i < 10000; i++) {
+        if (map[i].ptr == ptr) {
+            glob_size -= map[i].size;
+            map[i].ptr = 0;
+            break;
+        }
+    }
+}
+
+void print_ram() {
+    printf("%zu\n", glob_size);
+}
 
 void free_result_list(struct result_list_tuple* rlt){
 //#TODO
