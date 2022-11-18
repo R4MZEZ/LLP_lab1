@@ -19,11 +19,14 @@ void interactive_mode(FILE *f) {
     printf("Type 'help' for available commands info.\n");
 
 
-    char *input_str = NULL;
+    char *input_str = malloc(INPUT_LINE_SIZE);
     size_t len = 0;
     size_t c;
     char **arr;
     getline(&input_str, &len, stdin);
+    if (strcmp(input_str, "\n") == 0) {
+        getline(&input_str, &len, stdin);
+    }
     c = split(input_str, ' ', &arr);
 
     while (strcmp(arr[0], "exit") != 0) {

@@ -99,7 +99,6 @@ insert_new_tuple(FILE *file, struct tuple *tuple, size_t full_tuple_size, uint64
     ftruncate(fd, ftell(file) + full_tuple_size);
     enum file_write_status status = write_tuple(file, tuple, full_tuple_size - sizeof(union tuple_header));
     return status == WRITE_OK ? CRUD_OK : CRUD_INVALID;
-    return 0;
 }
 
 
@@ -176,7 +175,7 @@ size_t append_to_id_array(FILE *file, uint64_t offset) {
 
     fseek(file, 0, SEEK_SET);
     if (write_tree_header(file, header) != WRITE_OK){
-        printf("ERROR");
+        printf("WRITE ERROR\n");
     }
 
 

@@ -151,7 +151,7 @@ enum file_write_status write_tree_header(FILE *file, struct tree_header *header)
 
     enum file_write_status code = write_tree_subheader(file, header->subheader);
     if (code != WRITE_OK){
-        printf("ERROR\n");
+        printf("WRITE ERROR\n");
     }
 
     fseek(file, sizeof(struct tree_subheader), SEEK_SET);
@@ -161,7 +161,7 @@ enum file_write_status write_tree_header(FILE *file, struct tree_header *header)
 
 
     if (code == CRUD_INVALID){
-        printf("ERROR\n");
+        printf("WRITE ERROR\n");
     }
     return code;
 }

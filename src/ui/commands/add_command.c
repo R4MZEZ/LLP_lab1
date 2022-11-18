@@ -10,8 +10,10 @@ size_t add_input_item(FILE *f, char **str, size_t pattern_size, const uint32_t *
         printf("Not-numeric id.\n");
         return 1;
     }
+
     for (size_t iter = 2; iter < pattern_size + 2; iter++) {
         count = split(str[iter], '=', &key_value);
+
         if (count != 2) {
             return 2;
         }
@@ -34,24 +36,24 @@ size_t add_input_item(FILE *f, char **str, size_t pattern_size, const uint32_t *
                 else if (strcmp(key_value[1], "False") == 0)
                     fields[par_pos] = false;
                 else {
-                    printf("Not-bool %s\n", key_value[1]);
+                    printf("Not-bool '%s'\n", key_value[1]);
                     return 4;
                 }
                 break;
             case FLOAT_TYPE:
                 val = strtod(key_value[1], NULL);
                 if (val == 0.0) {
-                    printf("Not-float %s\n", key_value[1]);
+                    printf("Not-float '%s'\n", key_value[1]);
                     return 4;
                 }
                 memcpy(&fields[par_pos], &val, sizeof(val));
                 break;
             case INTEGER_TYPE:
                 if (!isNumeric(key_value[1])) {
-                    printf("Not-integer %s\n", key_value[1]);
+                    printf("Not-integer '%s'\n", key_value[1]);
                     return 4;
                 }
-                fields[par_pos] = atoi(key_value[1]);
+                fields[par_pos] = strtol(key_value[1], NULL, 10);
                 break;
             case STRING_TYPE:
                 fields[par_pos] = (uint64_t) key_value[1];
@@ -62,7 +64,7 @@ size_t add_input_item(FILE *f, char **str, size_t pattern_size, const uint32_t *
         free_test(key_value);
 
     }
-    add_tuple(f, fields, atoi(str[1]));
+    add_tuple(f, fields, strtol(str[1], NULL, 10));
 
 
     return 0;

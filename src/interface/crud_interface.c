@@ -246,16 +246,16 @@ void print_tree_header_from_file(FILE *file) {
                header->pattern[iter]->header->size, header->pattern[iter]->header->type,
                header->pattern[iter]->key_value);
     }
-//    printf("--- ID ARRAY ---\n");
-//
-//    size_t real_id_array_size = get_real_id_array_size(header.subheader->pattern_size, header.subheader->cur_id);
-//    for (size_t iter = 0; iter < (real_id_array_size / PRINT_ID_ARRAY_LEN); iter++) {
-//        for (size_t inner_iter = 0; inner_iter < PRINT_ID_ARRAY_LEN; inner_iter++) {
-//            //printf("%ld", iter * PRINT_ID_ARRAY_LEN + inner_iter);
-//            printf("%16lx ", header.id_sequence[iter * PRINT_ID_ARRAY_LEN + inner_iter]);
-//        }
-//        printf("\n");
-//    }
+    printf("--- ID ARRAY ---\n");
+
+    size_t real_id_array_size = get_real_id_array_size(header->subheader->pattern_size, header->subheader->cur_id);
+    for (size_t iter = 0; iter < (header->subheader->cur_id / PRINT_ID_ARRAY_LEN); iter++) {
+        for (size_t inner_iter = 0; inner_iter < PRINT_ID_ARRAY_LEN; inner_iter++) {
+            //printf("%ld", iter * PRINT_ID_ARRAY_LEN + inner_iter);
+            printf("%16lx ", header->id_sequence[iter * PRINT_ID_ARRAY_LEN + inner_iter]);
+        }
+        printf("\n");
+    }
 
     free_test_tree_header(header);
 }

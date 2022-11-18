@@ -1,20 +1,5 @@
 #include "string_tools.h"
 
-char *readln(FILE *stream) {
-    static char *str = NULL;
-    static size_t i = 0;
-    int ch = fgetc(stream);
-
-    if ((ch == '\n') || (ch == EOF)) {
-        str = malloc_test(i + 1);
-        str[i] = 0;
-    } else {
-        i++;
-        readln(stream);
-        str[--i] = ch;
-    }
-    return str;
-}
 
 char *concat(const char *s1, const char *s2) {
     char *result = malloc_test(strlen(s1) + strlen(s2) + 1);
@@ -24,6 +9,7 @@ char *concat(const char *s1, const char *s2) {
 }
 
 size_t split(char *str, const char c, char ***arr) {
+
     int count = 1;
     int i = 0;
     char *p;
@@ -58,8 +44,10 @@ bool isNumeric(const char *str) {
     return true;
 }
 
+
+
 void parse_file(FILE *to, FILE *from) {
-    char line[1024];
+    char line[INPUT_LINE_SIZE];
     char **args = NULL;
     size_t pattern_size;
     struct tree_header *header = malloc_test(sizeof(struct tree_header));
@@ -75,10 +63,9 @@ void parse_file(FILE *to, FILE *from) {
     }
 
 
+    fgets(line, INPUT_LINE_SIZE, from);
     while (!feof(from)) {
-//        line = readln(from);
-        fgets(line,1024,from);
-        if (strcmp(line, "") == 0)
+        if (strlen(line) == 0)
             break;
         line[strlen(line) - 1] = '\0';
         char *prefix = concat("add ", line);
@@ -87,19 +74,18 @@ void parse_file(FILE *to, FILE *from) {
         size_t code = add_input_item(to, args, pattern_size, pattern_types, pattern_names);
 
 
-//        if (code != 0) {
-//            printf("Error code %zu\n In line: %s\n", code, line);
-//        }
+        if (code != 0) {
+            printf("Error code %zu\n In line: %s\n", code, line);
+        }
         free_test(prefix);
         free_test(args);
-//        free_test(line);
+        fgets(line, INPUT_LINE_SIZE, from);
     }
 
 
-
-    fclose(from);
-//    fflush(to);
     free_test_tree_header(header);
+    fclose(from);
+    fflush(to);
     free_test(pattern_types);
     free_test(pattern_names);
 
