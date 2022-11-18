@@ -59,9 +59,11 @@ size_t add_input_item(FILE *f, char **str, size_t pattern_size, const uint32_t *
         }
 
         par_pos = -1;
-        free(key_value);
+        free_test(key_value);
 
     }
     add_tuple(f, fields, atoi(str[1]));
+
+
     return 0;
 }

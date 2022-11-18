@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
             init_file(file);
             break;
         case 'p':
-            open_exist_file(arg_filename, &parsable);
+            open_parse_file(arg_filename, &parsable);
             open_empty_file(main_filename, &file);
             init_file(file);
             parse_file(file, parsable);
@@ -51,14 +51,14 @@ void init_file(FILE *file) {
     size_t count;
     scanf("%ld", &count);
     char *str;
-    char **str_array = malloc(count * sizeof(char *));
+    char **str_array = malloc_test(count * sizeof(char *));
     uint32_t type;
-    uint32_t *types = malloc(count * sizeof(uint32_t));
-    size_t *sizes = malloc(count * sizeof(size_t));
+    uint32_t *types = malloc_test(count * sizeof(uint32_t));
+    size_t *sizes = malloc_test(count * sizeof(size_t));
     size_t temp_size;
     for (size_t iter = 0; iter < count; iter++) {
         printf("--- Field %-3zu ---\n", iter);
-        str = malloc(1024);
+        str = malloc_test(1024);
         printf("Enter field name: ");
         scanf("%s", str);
         str_array[iter] = str;
@@ -73,10 +73,9 @@ void init_file(FILE *file) {
         types[iter] = type;
     }
     init_empty_file(file, str_array, types, count, sizes);
-    for (size_t iter = 0; iter < count; iter++) free(str_array[iter]);
-    free(str_array);
-    free(sizes);
-    free(types);
-
+    for (size_t iter = 0; iter < count; iter++) free_test(str_array[iter]);
+    free_test(str_array);
+    free_test(sizes);
+    free_test(types);
 
 }

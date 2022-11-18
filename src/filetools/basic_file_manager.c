@@ -32,11 +32,15 @@ static enum file_open_status open_file(char *filename, FILE **file, char *open_d
 }
 
 enum file_open_status open_exist_file(char *filename, FILE **file){
-    return open_file(filename, file, "r+");
+    return open_file(filename, file, "r+b");
+}
+
+enum file_open_status open_parse_file(char *filename, FILE **file){
+    return open_file(filename, file, "r");
 }
 
 enum file_open_status open_new_file(char *filename, FILE **file){
-    return open_file(filename, file, "w+");
+    return open_file(filename, file, "w+b");
 }
 
 void close_file(FILE *file){
@@ -46,5 +50,5 @@ void close_file(FILE *file){
 enum file_open_status open_empty_file(char *filename, FILE **file){
     open_file(filename, file, "w");
     close_file(*file);
-    return open_file(filename, file, "r+");
+    return open_file(filename, file, "r+b");
 }

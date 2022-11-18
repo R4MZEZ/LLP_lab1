@@ -66,18 +66,18 @@ find_by(FILE *f, char **arr, size_t pattern_size, const uint32_t *pattern_types,
         if (count == 3) {
             if (isNumeric(arr[2])) {
                 uint64_t id = atoi(arr[2]);
-                struct tree_header *header = malloc(sizeof(struct tree_header));
+                struct tree_header *header = malloc_test(sizeof(struct tree_header));
                 read_tree_header(header, f);
                 uint64_t *fields;
                 if (header->subheader->cur_id < id) {
                     printf("Too large id\n");
-                    free_tree_header(header);
+                    free_test_tree_header(header);
                 }
 
                 enum crud_operation_status status = get_tuple(f, &fields, id);
                 if (status) {
                     printf("No result\n");
-                    free_tree_header(header);
+                    free_test_tree_header(header);
                 }
                 for (size_t iter = 0; iter < header->subheader->pattern_size; iter++) {
                     double float_val;
@@ -94,12 +94,12 @@ find_by(FILE *f, char **arr, size_t pattern_size, const uint32_t *pattern_types,
                             break;
                         default:
                             printf("%-20s: %s\n", header->pattern[iter]->key_value, (char *) fields[iter]);
-                            free((char *) fields[iter]);
+                            free_test((char *) fields[iter]);
                             break;
                     }
                 }
-                free(fields);
-                free_tree_header(header);
+                free_test(fields);
+                free_test_tree_header(header);
             } else
                 printf("Not-integer id: %s\n", arr[2]);
         } else printf("Wrong number of arguments: 3 expected, %lu entered.\n", count - 1);

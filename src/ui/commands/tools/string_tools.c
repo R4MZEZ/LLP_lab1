@@ -6,7 +6,7 @@ char *readln(FILE *stream) {
     int ch = fgetc(stream);
 
     if ((ch == '\n') || (ch == EOF)) {
-        str = malloc(i + 1);
+        str = malloc_test(i + 1);
         str[i] = 0;
     } else {
         i++;
@@ -17,7 +17,7 @@ char *readln(FILE *stream) {
 }
 
 char *concat(const char *s1, const char *s2) {
-    char *result = malloc(strlen(s1) + strlen(s2) + 1);
+    char *result = malloc_test(strlen(s1) + strlen(s2) + 1);
     strcpy(result, s1);
     strcat(result, s2);
     return result;
@@ -35,7 +35,7 @@ size_t split(char *str, const char c, char ***arr) {
         p++;
     }
 
-    *arr = (char **) malloc(sizeof(char *) * count);
+    *arr = (char **) malloc_test(sizeof(char *) * count);
     if (*arr == NULL)
         exit(1);
 
@@ -62,12 +62,12 @@ void parse_file(FILE *to, FILE *from) {
     char line[1024];
     char **args = NULL;
     size_t pattern_size;
-    struct tree_header *header = malloc(sizeof(struct tree_header));
+    struct tree_header *header = malloc_test(sizeof(struct tree_header));
 
     read_tree_header(header, to);
     pattern_size = header->subheader->pattern_size;
-    uint32_t *pattern_types = malloc(sizeof(uint32_t) * pattern_size);
-    char **pattern_names = malloc(sizeof(char *) * pattern_size);
+    uint32_t *pattern_types = malloc_test(sizeof(uint32_t) * pattern_size);
+    char **pattern_names = malloc_test(sizeof(char *) * pattern_size);
 
     for (int i = 0; i < pattern_size; i++) {
         pattern_types[i] = header->pattern[i]->header->type;
@@ -77,27 +77,31 @@ void parse_file(FILE *to, FILE *from) {
 
     while (!feof(from)) {
 //        line = readln(from);
-        char* res = fgets(line,1024,from);
-        printf("%ld\n", (uint64_t) res);
+        fgets(line,1024,from);
         if (strcmp(line, "") == 0)
             break;
         line[strlen(line) - 1] = '\0';
         char *prefix = concat("add ", line);
         split(prefix, ' ', &args);
+
         size_t code = add_input_item(to, args, pattern_size, pattern_types, pattern_names);
-        if (code != 0) {
-            printf("Error code %zu\n In line: %s\n", code, line);
-        }
-//        free(line);
+
+
+//        if (code != 0) {
+//            printf("Error code %zu\n In line: %s\n", code, line);
+//        }
+        free_test(prefix);
+        free_test(args);
+//        free_test(line);
     }
 
 
 
     fclose(from);
-    fflush(to);
-    free_tree_header(header);
-    free(pattern_types);
-    free(pattern_names);
+//    fflush(to);
+    free_test_tree_header(header);
+    free_test(pattern_types);
+    free_test(pattern_names);
 
 
 }

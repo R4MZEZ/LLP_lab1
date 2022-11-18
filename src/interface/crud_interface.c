@@ -1,14 +1,16 @@
 #include "crud_interface.h"
 
 size_t add_tuple(FILE *file, uint64_t *fields, uint64_t parent_id) {
+
     uint32_t *types;
     size_t size;
     get_types(file, &types, &size);
-    struct tuple* new_tuple = malloc(sizeof(struct tuple));
-    union tuple_header new_tuple_header = {.parent = parent_id, .alloc = new_tuple};
+    struct tuple* new_tuple = malloc_test(sizeof(struct tuple));
+    union tuple_header new_tuple_header = {.parent = parent_id, .alloc = NULL_VALUE};
     new_tuple->header = new_tuple_header;
-    new_tuple->data = malloc(sizeof(uint64_t) * size);
+    new_tuple->data = malloc_test(sizeof(uint64_t) * size);
     uint64_t link;
+
     for (size_t iter = 0; iter < size; iter++) {
         if (types[iter] == STRING_TYPE) {
             insert_string_tuple(file, (char *) fields[iter], get_real_tuple_size(size), &link);
@@ -17,12 +19,20 @@ size_t add_tuple(FILE *file, uint64_t *fields, uint64_t parent_id) {
             new_tuple->data[iter] = (uint64_t) fields[iter];
         }
     }
+
+
     size_t full_tuple_size = sizeof(union tuple_header) + get_real_tuple_size(size);
     enum crud_operation_status status = insert_new_tuple(file, new_tuple, full_tuple_size, &link);
+
     link_strings_to_tuple(file, new_tuple, link);
+
     size_t id = append_to_id_array(file, link);
-    free_tuple(new_tuple);
-    free(types);
+
+
+    free_test_tuple(new_tuple);
+    free_test(types);
+
+
     return id;
 }
 
@@ -35,7 +45,7 @@ enum crud_operation_status get_tuple(FILE *file, uint64_t **fields, uint64_t id)
     get_types(file, &types, &size);
     fseek(file, offset, SEEK_SET);
     read_basic_tuple(file, &cur_tuple, (uint64_t) size);
-    *fields = malloc(sizeof(uint64_t) * size);
+    *fields = malloc_test(sizeof(uint64_t) * size);
     for (size_t iter = 0; iter < size; iter++) {
         if (types[iter] == STRING_TYPE) {
             char *s;
@@ -47,8 +57,8 @@ enum crud_operation_status get_tuple(FILE *file, uint64_t **fields, uint64_t id)
         }
 
     }
-    free_tuple(cur_tuple);
-    free(types);
+    free_test_tuple(cur_tuple);
+    free_test(types);
     return CRUD_OK;
 }
 
@@ -71,7 +81,7 @@ enum crud_operation_status remove_tuple(FILE *file, uint64_t id, uint8_t str_fla
                 fseek(file, (long) offset, SEEK_SET);
                 read_basic_tuple(file, &tpl, size);
                 remove_tuple(file, tpl->data[field_num], 1);
-                free_tuple(tpl);
+                free_test_tuple(tpl);
             }
         }
 
@@ -91,26 +101,26 @@ enum crud_operation_status remove_tuple(FILE *file, uint64_t id, uint8_t str_fla
             read_string_tuple(file, &str_tpl, size);
             swap_last_tuple_to(file, id, get_real_tuple_size(size) + sizeof(union tuple_header));
             id = str_tpl->header.next;
-            free_tuple(str_tpl);
+            free_test_tuple(str_tpl);
         }
 
     }
-    free(types);
+    free_test(types);
     return CRUD_OK;
 }
 
 static void append_to_result_list(struct tuple **tuple_to_add, uint64_t id, struct result_list_tuple **result) {
     if ((*result) == NULL) {
-        *result = malloc(sizeof(struct result_list_tuple));
+        *result = malloc_test(sizeof(struct result_list_tuple));
         (*result)->prev = NULL;
     } else {
-        struct result_list_tuple *new_result = malloc(sizeof(struct result_list_tuple));
+        struct result_list_tuple *new_result = malloc_test(sizeof(struct result_list_tuple));
         new_result->prev = *result;
         *result = new_result;
     }
     (*result)->value = *tuple_to_add;
     (*result)->id = id;
-    *tuple_to_add = malloc(sizeof(struct tuple));
+    *tuple_to_add = malloc_test(sizeof(struct tuple));
 }
 
 enum crud_operation_status
@@ -119,7 +129,7 @@ find_by_field(FILE *file, uint64_t field_number, uint64_t *condition, struct res
     size_t size;
     get_types(file, &types, &size);
     uint64_t type = types[field_number];
-    struct tree_header *header = malloc(sizeof(struct tree_header));
+    struct tree_header *header = malloc_test(sizeof(struct tree_header));
     read_tree_header(header, file);
     struct tuple *cur_tuple = NULL;
     for (size_t i = 0; i < header->subheader->cur_id; i++) {
@@ -132,7 +142,7 @@ find_by_field(FILE *file, uint64_t field_number, uint64_t *condition, struct res
             if (!strcmp(s, (char *) condition)) {
                 append_to_result_list(&cur_tuple, i, result);
             }
-            free(s);
+            free_test(s);
         } else {
             if (cur_tuple->data[field_number] == *condition) {
                 append_to_result_list(&cur_tuple, i, result);
@@ -140,15 +150,15 @@ find_by_field(FILE *file, uint64_t field_number, uint64_t *condition, struct res
         }
 
     }
-    free_tree_header(header);
-    free(types);
+    free_test_tree_header(header);
+    free_test(types);
     return 0;
 }
 
 enum crud_operation_status find_by_parent(FILE *file, uint64_t parent_id, struct result_list_tuple **result) {
-    struct tree_header *header = malloc(sizeof(struct tree_header));
+    struct tree_header *header = malloc_test(sizeof(struct tree_header));
     read_tree_header(header, file);
-    struct tuple *cur_tuple = malloc(sizeof(struct tuple));
+    struct tuple *cur_tuple = malloc_test(sizeof(struct tuple));
     for (size_t i = 0; i < header->subheader->cur_id; i++) {
         if (header->id_sequence[i] == NULL_VALUE) continue;
         fseek(file, header->id_sequence[i], SEEK_SET);
@@ -158,7 +168,7 @@ enum crud_operation_status find_by_parent(FILE *file, uint64_t parent_id, struct
         }
 
     }
-    free_tree_header(header);
+    free_test_tree_header(header);
     return 0;
 }
 
@@ -182,8 +192,8 @@ enum crud_operation_status update_tuple(FILE *file, uint64_t field_number, uint6
 
         write_tuple(file, cur_tuple, get_real_tuple_size(size));
     }
-    free_tuple(cur_tuple);
-    free(types);
+    free_test_tuple(cur_tuple);
+    free_test(types);
     return 0;
 }
 
@@ -205,7 +215,7 @@ void print_tuple_array_from_file(FILE *file) {
                 char *s;
                 read_string_from_tuple(file, &s, header.subheader->pattern_size, cur_tuple->data[iter]);
                 printf("%-20s %s\n", header.pattern[iter]->key_value, s);
-                free(s);
+                free_test(s);
             } else if (types[iter] == INTEGER_TYPE || types[iter] == BOOLEAN_TYPE) {
                 printf("%-20s %lu\n", header.pattern[iter]->key_value, cur_tuple->data[iter]);
             } else if (types[iter] == FLOAT_TYPE) {
@@ -214,36 +224,38 @@ void print_tuple_array_from_file(FILE *file) {
                 printf("%-20s %.6f\n", header.pattern[iter]->key_value, res);
             }
         }
-        free_tuple(cur_tuple);
+        free_test_tuple(cur_tuple);
     }
-    free(types);
+    free_test(types);
 
 }
 
 void print_tree_header_from_file(FILE *file) {
-    struct tree_header header;
-    read_tree_header(&header, file);
+    struct tree_header* header = malloc_test(sizeof(struct tree_header));
+    read_tree_header(header, file);
     printf("--- SUBHEADER ---\n");
-    printf("%-20s%ld\n", "ASCII Signature: ", header.subheader->ASCII_signature);
-    printf("%-20s%ld\n", "Root Offset: ", header.subheader->root_offset);
-    printf("%-20s%ld\n", "First Sequence: ", header.subheader->first_seq);
-    printf("%-20s%ld\n", "Second Sequence: ", header.subheader->second_seq);
-    printf("%-20s%ld\n", "Current ID: ", header.subheader->cur_id);
-    printf("%-20s%ld\n", "Pattern Size: ", header.subheader->pattern_size);
+    printf("%-20s%ld\n", "ASCII Signature: ", header->subheader->ASCII_signature);
+    printf("%-20s%ld\n", "Root Offset: ", header->subheader->root_offset);
+    printf("%-20s%ld\n", "First Sequence: ", header->subheader->first_seq);
+    printf("%-20s%ld\n", "Second Sequence: ", header->subheader->second_seq);
+    printf("%-20s%ld\n", "Current ID: ", header->subheader->cur_id);
+    printf("%-20s%ld\n", "Pattern Size: ", header->subheader->pattern_size);
     printf("--- PATTERN ---\n");
-    for (size_t iter = 0; iter < header.subheader->pattern_size; iter++) {
+    for (size_t iter = 0; iter < header->subheader->pattern_size; iter++) {
         printf("Key %3d [Type %3d]: %s\n",
-               header.pattern[iter]->header->size, header.pattern[iter]->header->type,
-               header.pattern[iter]->key_value);
+               header->pattern[iter]->header->size, header->pattern[iter]->header->type,
+               header->pattern[iter]->key_value);
     }
-    printf("--- ID ARRAY ---\n");
+//    printf("--- ID ARRAY ---\n");
+//
+//    size_t real_id_array_size = get_real_id_array_size(header.subheader->pattern_size, header.subheader->cur_id);
+//    for (size_t iter = 0; iter < (real_id_array_size / PRINT_ID_ARRAY_LEN); iter++) {
+//        for (size_t inner_iter = 0; inner_iter < PRINT_ID_ARRAY_LEN; inner_iter++) {
+//            //printf("%ld", iter * PRINT_ID_ARRAY_LEN + inner_iter);
+//            printf("%16lx ", header.id_sequence[iter * PRINT_ID_ARRAY_LEN + inner_iter]);
+//        }
+//        printf("\n");
+//    }
 
-    size_t real_id_array_size = get_real_id_array_size(header.subheader->pattern_size, header.subheader->cur_id);
-    for (size_t iter = 0; iter < (real_id_array_size / PRINT_ID_ARRAY_LEN); iter++) {
-        for (size_t inner_iter = 0; inner_iter < PRINT_ID_ARRAY_LEN; inner_iter++) {
-            //printf("%ld", iter * PRINT_ID_ARRAY_LEN + inner_iter);
-            printf("%16lx ", header.id_sequence[iter * PRINT_ID_ARRAY_LEN + inner_iter]);
-        }
-        printf("\n");
-    }
+    free_test_tree_header(header);
 }

@@ -60,7 +60,7 @@ size_t update_item(FILE *f, char **str, size_t pattern_size, const uint32_t *pat
                 break;
         }
         update_tuple(f, par_pos, &value, atoi(str[1]));
-        free(key_value);
+        free_test(key_value);
         par_pos = -1;
     }
 

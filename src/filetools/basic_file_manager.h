@@ -70,4 +70,6 @@ enum file_open_status {
     OPEN_FAILED
 };
 
+enum file_open_status open_parse_file(char *filename, FILE **file);
+
 #endif

@@ -2,12 +2,12 @@
 
 void interactive_mode(FILE *f) {
     size_t pattern_size;
-    struct tree_header *header = malloc(sizeof(struct tree_header));
+    struct tree_header *header = malloc_test(sizeof(struct tree_header));
 
     read_tree_header(header, f);
     pattern_size = header->subheader->pattern_size;
-    uint32_t *pattern_types = malloc(sizeof(uint32_t) * pattern_size);
-    char **pattern_names = malloc(sizeof(char *) * pattern_size);
+    uint32_t *pattern_types = malloc_test(sizeof(uint32_t) * pattern_size);
+    char **pattern_names = malloc_test(sizeof(char *) * pattern_size);
 
     for (int i = 0; i < pattern_size; i++) {
         pattern_types[i] = header->pattern[i]->header->type;
@@ -71,7 +71,7 @@ void interactive_mode(FILE *f) {
 
         } else printf("Unknown command, try using 'help'\n");
 
-        free(arr);
+        free_test(arr);
         getline(&input_str, &len, stdin);
         c = split(input_str, ' ', &arr);
     }

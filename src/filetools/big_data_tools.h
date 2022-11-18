@@ -6,6 +6,7 @@
 #include "../interface/signatures.h"
 #include "../generator/empty_generator.h"
 #include "basic_file_manager.h"
+#include "../interface/crud_interface.h"
 
 size_t get_real_id_array_size(uint64_t pattern_size, uint64_t cur_id);
 /**
@@ -79,7 +80,10 @@ enum file_read_status read_basic_tuple(FILE *file, struct tuple **tuple, uint64_
 enum file_read_status read_tree_header(struct tree_header *header, FILE *file);
 enum file_read_status read_string_from_tuple(FILE *file, char **string, uint64_t pattern_size, uint64_t offset);
 enum file_write_status write_tuple(FILE *file, struct tuple *tuple, size_t tuple_size);
-void free_tree_header(struct tree_header* header);
-void free_tuple(struct tuple* tuple);
+void free_test_tree_header(struct tree_header* header);
+void free_test_tuple(struct tuple* tuple);
+void *malloc_test(size_t size);
+void free_test(void *ptr);
+void print_ram();
 
 #endif
