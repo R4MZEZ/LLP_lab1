@@ -2,4 +2,3 @@
 src/.idea/
 cmake-build-debug/
 main
-*.txt
