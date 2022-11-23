@@ -64,6 +64,7 @@ size_t add_input_item(FILE *f, char **str, size_t pattern_size, const uint32_t *
         free_test(key_value);
 
     }
+
     add_tuple(f, fields, strtol(str[1], NULL, 10));
 
 

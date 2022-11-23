@@ -56,7 +56,7 @@ size_t update_item(FILE *f, char **str, size_t pattern_size, const uint32_t *pat
                 value = atoi(key_value[1]);
                 break;
             case STRING_TYPE:
-                value = (uint64_t) key_value[1];
+                value = key_value[1];
                 break;
         }
         update_tuple(f, par_pos, &value, atoi(str[1]));
@@ -66,3 +66,5 @@ size_t update_item(FILE *f, char **str, size_t pattern_size, const uint32_t *pat
 
     return 0;
 }
+
+

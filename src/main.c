@@ -92,3 +92,4 @@ void init_file(FILE *file) {
     free_test(count_str);
     free_test(type);
 }
+

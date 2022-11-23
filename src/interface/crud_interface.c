@@ -13,7 +13,9 @@ size_t add_tuple(FILE *file, uint64_t *fields, uint64_t parent_id) {
 
     for (size_t iter = 0; iter < size; iter++) {
         if (types[iter] == STRING_TYPE) {
-            insert_string_tuple(file, (char *) fields[iter], get_real_tuple_size(size), &link);
+            char* param = NULL;
+            memcpy(&param, &fields[iter], sizeof(fields[iter]));
+            insert_string_tuple(file, param, get_real_tuple_size(size), &link);
             new_tuple->data[iter] = link;
         } else {
             new_tuple->data[iter] = (uint64_t) fields[iter];
@@ -50,8 +52,7 @@ enum crud_operation_status get_tuple(FILE *file, uint64_t **fields, uint64_t id)
         if (types[iter] == STRING_TYPE) {
             char *s;
             read_string_from_tuple(file, &s, size, cur_tuple->data[iter]);
-            (*fields)[iter] = (uint64_t) s;
-
+            memcpy(&(*fields)[iter], &s, sizeof(s));
         } else {
             (*fields)[iter] = cur_tuple->data[iter];
         }

@@ -7,12 +7,20 @@ size_t get_real_tuple_size(uint64_t pattern_size) {
            : pattern_size * SINGLE_TUPLE_VALUE_SIZE;
 }
 
+static uint64_t max(uint64_t n1, uint64_t n2) {
+    if (n1 > n2) return n1;
+    return n2;
+}
+
 size_t get_real_id_array_size(uint64_t pattern_size, uint64_t cur_id) {
-    size_t real_tuple_size = get_real_tuple_size(pattern_size);
+    size_t real_tuple_size = get_real_tuple_size(pattern_size) + sizeof(union tuple_header);
     if (cur_id == 0) cur_id++;
-//    return (cur_id * OFFSET_VALUE_SIZE / real_tuple_size) * real_tuple_size +
-//           cur_id * OFFSET_VALUE_SIZE % real_tuple_size ? real_tuple_size : 0;
-    return 30000;
+    size_t whole = (cur_id * OFFSET_VALUE_SIZE / real_tuple_size);
+    size_t frac = (cur_id * OFFSET_VALUE_SIZE % real_tuple_size ? 1: 0);
+    size_t value = max( (frac + whole) * real_tuple_size / OFFSET_VALUE_SIZE, MIN_ID_ARRAY_SIZE * real_tuple_size / OFFSET_VALUE_SIZE);
+//    printf("%zu %zu %zu %zu %zu %zu\n", pattern_size, cur_id, real_tuple_size, whole, frac, value);
+
+    return value;
 }
 
 static enum file_read_status read_tree_subheader(struct tree_subheader *header, FILE *file) {

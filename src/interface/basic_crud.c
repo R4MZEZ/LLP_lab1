@@ -8,18 +8,19 @@ enum crud_operation_status delete_last_tuple(FILE *file, size_t full_tuple_size)
     return ftruncate(fd, ftell(file));
 }
 
-enum crud_operation_status swap_last_tuple_to(FILE *file, uint64_t pos_to, size_t tuple_size) {
+
+
+enum crud_operation_status swap_tuple_to(FILE *file, uint64_t pos_to, uint64_t pos_from, size_t tuple_size) {
     uint32_t *types;
     size_t size;
     get_types(file, &types, &size);
 
-    fseek(file, (long) -(get_real_tuple_size(size) + sizeof(union tuple_header)), SEEK_END);
-    uint64_t pos_from = ftell(file);
 
     if (pos_from != pos_to) {
         fseek(file, pos_from, SEEK_SET);
         void *buffer = malloc_test(tuple_size);
         read_from_file(file, buffer, tuple_size);
+
 
         fseek(file, pos_to, SEEK_SET);
         write_to_file(file, buffer, tuple_size);
@@ -89,6 +90,19 @@ enum crud_operation_status swap_last_tuple_to(FILE *file, uint64_t pos_to, size_
     free_test(types);
     ftruncate(fileno(file), (long) pos_from);
     return CRUD_OK;
+}
+
+enum crud_operation_status swap_last_tuple_to(FILE *file, uint64_t pos_to, size_t tuple_size){
+    uint32_t *types;
+    size_t size;
+    get_types(file, &types, &size);
+
+    fseek(file, (long) -(get_real_tuple_size(size) + sizeof(union tuple_header)), SEEK_END);
+    uint64_t pos_from = ftell(file);
+
+    free_test(types);
+
+    return swap_tuple_to(file, pos_to, pos_from, tuple_size);
 }
 
 enum crud_operation_status
@@ -169,6 +183,18 @@ size_t append_to_id_array(FILE *file, uint64_t offset) {
 
     fseek(file, 0, SEEK_SET);
     read_tree_header(header, file);
+
+
+    if (header->subheader->cur_id == get_real_id_array_size(header->subheader->pattern_size, header->subheader->cur_id)){
+        uint64_t from = ftell(file);
+        fseek(file, 0, SEEK_END);
+        uint64_t cur_end = ftell(file);
+        ftruncate(fileno(file), cur_end + get_real_tuple_size(header->subheader->pattern_size) + sizeof(union tuple_header));
+        swap_tuple_to(file, from, cur_end, get_real_tuple_size(header->subheader->pattern_size));
+        read_tree_header(header, file);
+    }
+
+
     header->id_sequence[header->subheader->cur_id] = offset;
     header->subheader->cur_id++;
     id = header->subheader->cur_id - 1;
@@ -235,12 +261,12 @@ enum crud_operation_status offset_to_id(FILE *file, uint64_t *id, uint64_t offse
 
 enum crud_operation_status change_string_tuple(FILE *file, uint64_t offset, char *new_string, uint64_t size) {
     struct tuple *cur_tuple = NULL;
-    int64_t len = strlen(new_string);
+    uint64_t len = strlen(new_string);
     uint64_t old_offset = offset;
     do {
         offset = old_offset;
         fseek(file, offset, SEEK_SET);
-        read_basic_tuple(file, &cur_tuple, size);
+        read_string_tuple(file, &cur_tuple, size);
         fseek(file, offset, SEEK_SET);
         cur_tuple->data = (uint64_t *) (new_string);
         new_string = new_string + size;
