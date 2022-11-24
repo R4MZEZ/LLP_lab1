@@ -5,17 +5,22 @@ size_t add_tuple(FILE *file, uint64_t *fields, uint64_t parent_id) {
     uint32_t *types;
     size_t size;
     get_types(file, &types, &size);
+    struct tree_header* header = malloc(sizeof(struct tree_header));
+    read_tree_header(header, file);
+
     struct tuple* new_tuple = malloc_test(sizeof(struct tuple));
-    union tuple_header new_tuple_header = {.parent = parent_id, .alloc = NULL_VALUE};
+    union tuple_header new_tuple_header = {.parent = parent_id, .alloc = header->subheader->cur_id};
+
     new_tuple->header = new_tuple_header;
-    new_tuple->data = malloc_test(sizeof(uint64_t) * size);
+    new_tuple->data = malloc_test(get_real_tuple_size(size));
     uint64_t link;
+
 
     for (size_t iter = 0; iter < size; iter++) {
         if (types[iter] == STRING_TYPE) {
-            char* param = NULL;
-            memcpy(&param, &fields[iter], sizeof(fields[iter]));
-            insert_string_tuple(file, param, get_real_tuple_size(size), &link);
+//            char* param = NULL;
+//            memcpy(&param, &fields[iter], sizeof(fields[iter]));
+            insert_string_tuple(file, fields[iter], get_real_tuple_size(size), &link);
             new_tuple->data[iter] = link;
         } else {
             new_tuple->data[iter] = (uint64_t) fields[iter];
@@ -26,16 +31,17 @@ size_t add_tuple(FILE *file, uint64_t *fields, uint64_t parent_id) {
     size_t full_tuple_size = sizeof(union tuple_header) + get_real_tuple_size(size);
     enum crud_operation_status status = insert_new_tuple(file, new_tuple, full_tuple_size, &link);
 
+
+
     link_strings_to_tuple(file, new_tuple, link);
 
     size_t id = append_to_id_array(file, link);
 
-
     free_test_tuple(new_tuple);
     free_test(types);
+    free_test_tree_header(header);
 
-
-    return id;
+    return status;
 }
 
 enum crud_operation_status get_tuple(FILE *file, uint64_t **fields, uint64_t id) {
@@ -249,7 +255,7 @@ void print_tree_header_from_file(FILE *file) {
     }
     printf("--- ID ARRAY ---\n");
 
-    size_t real_id_array_size = get_real_id_array_size(header->subheader->pattern_size, header->subheader->cur_id);
+    size_t real_id_array_size = get_id_array_size(header->subheader->pattern_size, header->subheader->cur_id);
     for (size_t iter = 0; iter < (header->subheader->cur_id / PRINT_ID_ARRAY_LEN); iter++) {
         for (size_t inner_iter = 0; inner_iter < PRINT_ID_ARRAY_LEN; inner_iter++) {
             //printf("%ld", iter * PRINT_ID_ARRAY_LEN + inner_iter);

@@ -5,9 +5,9 @@ find_by(FILE *f, char **arr, size_t pattern_size, const uint32_t *pattern_types,
     struct result_list_tuple *result = NULL;
     if (strcmp(arr[1], "parent") == 0) {
         if (count == 3) {
-            if (isNumeric(arr[2]))
+            if (isNumeric(arr[2])) {
                 find_by_parent(f, atoi(arr[2]), &result);
-            else
+            }else
                 printf("Not-integer parent id: %s\n", arr[2]);
         } else
             printf("Wrong number of arguments: 3 expected, %lu entered.\n", count - 1);

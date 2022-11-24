@@ -12,16 +12,16 @@ static uint64_t max(uint64_t n1, uint64_t n2) {
     return n2;
 }
 
-size_t get_real_id_array_size(uint64_t pattern_size, uint64_t cur_id) {
+size_t get_id_array_size(uint64_t pattern_size, uint64_t cur_id) {
     size_t real_tuple_size = get_real_tuple_size(pattern_size) + sizeof(union tuple_header);
     if (cur_id == 0) cur_id++;
     size_t whole = (cur_id * OFFSET_VALUE_SIZE / real_tuple_size);
     size_t frac = (cur_id * OFFSET_VALUE_SIZE % real_tuple_size ? 1: 0);
     size_t value = max( (frac + whole) * real_tuple_size / OFFSET_VALUE_SIZE, MIN_ID_ARRAY_SIZE * real_tuple_size / OFFSET_VALUE_SIZE);
 //    printf("%zu %zu %zu %zu %zu %zu\n", pattern_size, cur_id, real_tuple_size, whole, frac, value);
-
     return value;
 }
+
 
 static enum file_read_status read_tree_subheader(struct tree_subheader *header, FILE *file) {
     enum file_read_status code = read_from_file(file, header, sizeof(struct tree_subheader));
@@ -55,7 +55,7 @@ enum file_read_status read_tree_header(struct tree_header *header, FILE *file) {
         *array_of_key = element_pattern;
     }
 
-    size_t real_id_array_size = get_real_id_array_size(header->subheader->pattern_size, header->subheader->cur_id);
+    size_t real_id_array_size = get_id_array_size(header->subheader->pattern_size, header->subheader->cur_id);
     uint64_t *id_array = (uint64_t *) malloc_test(real_id_array_size * sizeof(uint64_t));
     header->id_sequence = id_array;
     code |= read_from_file(file, id_array, real_id_array_size * sizeof(uint64_t));
@@ -164,7 +164,7 @@ enum file_write_status write_tree_header(FILE *file, struct tree_header *header)
 
     fseek(file, sizeof(struct tree_subheader), SEEK_SET);
     code |= write_pattern(file, header->pattern, pattern_size);
-    size_t real_id_array_size = get_real_id_array_size(header->subheader->pattern_size, header->subheader->cur_id);
+    size_t real_id_array_size = get_id_array_size(header->subheader->pattern_size, header->subheader->cur_id);
     code |= write_id_sequence(file, header->id_sequence, real_id_array_size * sizeof(uint64_t));
 
 
@@ -208,6 +208,7 @@ void free_test_tree_header(struct tree_header* header){
         free_test(header->pattern[iter]->header);
         free_test(header->pattern[iter]);
     }
+
     free_test(header->pattern);
     free_test(header->id_sequence);
     free_test(header->subheader);
