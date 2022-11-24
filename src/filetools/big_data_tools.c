@@ -229,22 +229,22 @@ size_t glob_size = 0;
 size_t iter = 0;
 
 void *malloc_test(size_t size){
-    glob_size += size;
+//    glob_size += size;
     void *ptr = malloc(size);
-    map[iter].ptr = ptr;
-    map[iter++].size = size;
+//    map[iter].ptr = ptr;
+//    map[iter++].size = size;
     return ptr;
 }
 
 void free_test(void *ptr){
     free(ptr);
-    for(size_t i = 0; i < 100000; i++) {
-        if (map[i].ptr == ptr) {
-            glob_size -= map[i].size;
-            map[i].ptr = 0;
-            break;
-        }
-    }
+//    for(size_t i = 0; i < 100000; i++) {
+//        if (map[i].ptr == ptr) {
+//            glob_size -= map[i].size;
+//            map[i].ptr = 0;
+//            break;
+//        }
+//    }
 }
 
 void print_ram() {
